@@ -370,6 +370,14 @@ class WorkerController extends Controller
             $phone = $request->phone;
             $otpService = new \App\Services\OTPService();
 
+            if ($otpService->hasManualOTP()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Manual OTP is ready',
+                    'phone' => $phone,
+                ], 200);
+            }
+
             // Find existing worker or create a temporary record for new registration
             $worker = Worker::where('phone', $phone)->first();
             
@@ -385,7 +393,7 @@ class WorkerController extends Controller
             }
 
             // Generate OTP
-            $otp = "123456";//$otpService->generateOTP();
+            $otp = $otpService->generateOTP();
 
             // Store OTP in database
             $otpService->storeOTP($worker, $otp);
@@ -431,6 +439,16 @@ class WorkerController extends Controller
                 ], 422);
             }
 
+            $otpService = new \App\Services\OTPService();
+
+            if ($otpService->verifyManualOTP((string) $request->otp)) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'OTP verified successfully',
+                    'phone' => $request->phone,
+                ], 200);
+            }
+
             $worker = Worker::where('phone', $request->phone)->first();
 
             if (!$worker) {
@@ -452,8 +470,6 @@ class WorkerController extends Controller
                     'phone' => $request->phone,
                 ], 200);
             }
-
-            $otpService = new \App\Services\OTPService();
 
             if (!$otpService->verifyOTP($worker, $request->otp)) {
                 return response()->json([

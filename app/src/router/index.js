@@ -31,7 +31,7 @@ import WorkerDashboardWorkEmployerDetail from '@/components/worker/search/WorkDe
 // Employer views
 import Employer from '../views/Employer.vue'
 import EmployerLogin from '../views/EmployerLogin.vue'
-import EmployerForgotPassword from '@/views/EmployerForgotPassword.vue'
+import EmployerForgotPassword from '@/views/WorkerFrogotPassword.vue'
 import EmployerRegister from '../views/EmployerRegister.vue'
 import EmployerDashboard from '../views/EmployerDashboard.vue'
 import EmployerDashboardHomePage from '../components/employer/HomePage.vue'

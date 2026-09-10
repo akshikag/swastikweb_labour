@@ -34,6 +34,8 @@ return [
     'sms' => [
         // Provider: 'twilio', 'aws-sns', or 'mock'
         'provider' => env('SMS_PROVIDER', 'mock'),
+        // Optional fixed OTP for local/manual testing. Keep this unset in production.
+        'manual_otp' => env('SMS_MANUAL_OTP'),
     ],
 
     'twilio' => [

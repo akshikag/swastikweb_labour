@@ -2,6 +2,9 @@
   <v-app class="forgot-app">
     <main class="forgot-page">
       <img class="page-art" src="../assets/worker-login-bg.png" alt="" aria-hidden="true" />
+      <button class="forgot-back" type="button" aria-label="Go back" @click="router.back()">
+        <v-icon icon="mdi-arrow-left" />
+      </button>
 
       <section class="forgot-content" aria-labelledby="board-title">
         <header class="board-heading">
@@ -27,7 +30,7 @@
               <p v-if="mobileErrors.length" class="error-text">{{ mobileErrors[0] }}</p>
               <button class="primary-button" type="submit">SEND OTP</button>
             </form>
-            <router-link class="back-login" to="/worker-login">Back to Login</router-link>
+            <router-link class="back-login" :to="loginPath">Back to Login</router-link>
           </template>
 
           <template v-else-if="step === 2">
@@ -64,13 +67,16 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import useVuelidate from '@vuelidate/core'
 import { helpers, minLength, numeric, required } from '@vuelidate/validators'
 import api from '@/services/api.js'
 import apiRoutes from '@/services/apiRoutes.js'
 
 const router = useRouter()
+const route = useRoute()
+const isEmployer = computed(() => route.path.startsWith('/employer-'))
+const loginPath = computed(() => isEmployer.value ? '/employer-login' : '/worker-login')
 const step = ref(1)
 const mobile = ref('')
 const otp = ref('')
@@ -94,7 +100,8 @@ async function sendOtp() {
   v$.value.mobile.$touch()
   if (v$.value.mobile.$invalid) return
   try {
-    const response = await api.post(apiRoutes.workerSendOTP, { phone: mobile.value })
+    const endpoint = isEmployer.value ? apiRoutes.employerSendOTP : apiRoutes.workerSendOTP
+    const response = await api.post(endpoint, { phone: mobile.value })
     if (response.data.success) step.value = 2
     else alert(response.data.message || 'Failed to send OTP')
   } catch (error) { alert(error.response?.data?.message || 'Unable to send OTP. Please try again.') }
@@ -104,7 +111,8 @@ async function verifyOtp() {
   v$.value.otp.$touch()
   if (v$.value.otp.$invalid) return
   try {
-    const response = await api.post(apiRoutes.workerVerifyOTP, { phone: mobile.value, otp: otp.value })
+    const endpoint = isEmployer.value ? apiRoutes.employerVerifyOTP : apiRoutes.workerVerifyOTP
+    const response = await api.post(endpoint, { phone: mobile.value, otp: otp.value })
     if (response.data.success) step.value = 3
     else alert(response.data.message || 'Invalid OTP')
   } catch (error) { alert(error.response?.data?.message || 'OTP verification failed') }
@@ -112,7 +120,8 @@ async function verifyOtp() {
 
 async function resendOtp() {
   try {
-    const response = await api.post(apiRoutes.workerSendOTP, { phone: mobile.value })
+    const endpoint = isEmployer.value ? apiRoutes.employerSendOTP : apiRoutes.workerSendOTP
+    const response = await api.post(endpoint, { phone: mobile.value })
     alert(response.data.success ? `OTP resent to ${mobile.value}.` : response.data.message || 'Failed to resend OTP')
   } catch (error) { alert(error.response?.data?.message || 'Unable to resend OTP. Please try again.') }
 }
@@ -122,9 +131,10 @@ async function changePassword() {
   v$.value.confirmPassword.$touch()
   if (v$.value.newPassword.$invalid || v$.value.confirmPassword.$invalid) return
   try {
-    await api.post(apiRoutes.workerForgotPassword, { phone: mobile.value, password: newPassword.value })
+    const endpoint = isEmployer.value ? apiRoutes.employerForgotPassword : apiRoutes.workerForgotPassword
+    await api.post(endpoint, { phone: mobile.value, password: newPassword.value })
     alert('Password changed successfully!')
-    router.push('/worker-login')
+    router.push(loginPath.value)
   } catch (error) {
     alert(error.response?.data?.message || Object.values(error.response?.data?.errors || {}).flat().join('\n') || 'Unable to change password.')
   }
@@ -135,6 +145,7 @@ async function changePassword() {
 .forgot-app { background: #fff; }
 .forgot-page { position: relative; width: 100%; height: max(100dvh, min(177.5vw, 1672px)); min-height: 650px; overflow: hidden; background: #fff; font-family: 'Poppins', sans-serif; }
 .page-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; pointer-events: none; }
+.forgot-back { position:absolute;z-index:4;top:clamp(14px,3vw,30px);left:clamp(13px,3vw,28px);display:grid;place-items:center;width:clamp(39px,9vw,62px);height:clamp(39px,9vw,62px);border:1px solid rgb(255 255 255 / 90%);border-radius:50%;color:#071c36;background:linear-gradient(145deg,#1888df,#0758b4);box-shadow:0 5px 12px rgb(4 72 147 / 24%);cursor:pointer}.forgot-back .v-icon{font-size:clamp(27px,6vw,42px)}
 .forgot-content { position: absolute; top: 22.7%; left: 50%; z-index: 2; width: min(93vw, 720px); transform: translateX(-50%); }
 .board-heading { text-align: center; }
 .board-heading h1 { margin: 0; font-size: clamp(23px, 6vw, 42px); font-weight: 800; line-height: 1.34; letter-spacing: -.045em; }
