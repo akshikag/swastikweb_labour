@@ -10,8 +10,18 @@
             <v-col cols="8" class="chat-window pa-2" style="display: flex; flex-direction: column; height: 100%;">
                 <chat-window v-if="activeChat" :chat="activeChat" :currentUser="currentUser" @sendMessage="sendMessage"
                     :broadcastMode="broadcastMode" @sendBroadcast="sendBroadcast" />
-                <div v-else class="text-center grey--text mt-5">
-                    Select User to start messaging
+                <div v-else class="empty-chat-state text-center mt-5">
+                    <v-icon size="40" color="primary" class="mb-2">mdi-message-text-outline</v-icon>
+                    <div class="text-subtitle-1 font-weight-medium mb-1">
+                        {{ emptyStateTitle }}
+                    </div>
+                    <div class="text-body-2 text-medium-emphasis mb-4">
+                        {{ emptyStateMessage }}
+                    </div>
+                    <v-btn v-if="emptyStateRoute" color="primary" variant="flat" @click="goToStartChat">
+                        <v-icon start>mdi-account-search</v-icon>
+                        {{ emptyStateAction }}
+                    </v-btn>
                 </div>
             </v-col>
         </v-row>
@@ -59,12 +69,13 @@ function normalizeConversation(payload) {
         id: payload.id,
         partner_id: payload.partner_id,
         name: payload.name || 'Unknown',
-        lastMessage: payload.last_message || 'Start a conversation',
+        lastMessage: payload.last_message || payload.lastMessage || 'Start a conversation',
         unread: 0,
         messages: (payload.messages || []).map((message) => ({
             id: message.id,
             text: message.text,
             senderId: message.senderId,
+            senderType: message.senderType,
             timestamp: message.timestamp,
         })),
     };
@@ -76,6 +87,14 @@ const selectedConversationId = ref(null);
 const selectedPeerId = ref(normalizeChatId(route.params.id));
 const activeChat = computed(() => chats.value.find((chat) => chat.id === selectedConversationId.value));
 const broadcastMode = ref(false);
+const emptyStateTitle = computed(() => chats.value.length ? 'Select a conversation' : 'No conversations yet');
+const emptyStateMessage = computed(() => chats.value.length
+    ? 'Choose a contact from the list.'
+    : (currentUser.value.type === 'employer' ? 'Find workers to start a chat.' : 'Find jobs to start a chat.'));
+const emptyStateRoute = computed(() => currentUser.value.type === 'employer'
+    ? { name: 'employer-dashboard-search' }
+    : { name: 'worker-dashboard-search' });
+const emptyStateAction = computed(() => currentUser.value.type === 'employer' ? 'Find Workers' : 'Find Jobs');
 
 async function loadConversations() {
     try {
@@ -167,6 +186,10 @@ function openChat(chatId) {
     }
 }
 
+function goToStartChat() {
+    router.push(emptyStateRoute.value);
+}
+
 async function sendMessage(message) {
     if (!activeChat.value) return;
 
@@ -181,6 +204,7 @@ async function sendMessage(message) {
             id: Date.now(),
             text: messagePayload?.message || message,
             senderId: currentUser.value.id,
+            senderType: currentUser.value.type,
             timestamp: messagePayload?.timestamp || new Date().toISOString(),
         });
         activeChat.value.lastMessage = messagePayload?.message || message;

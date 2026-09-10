@@ -18,6 +18,8 @@ class EmployerProfile extends Model
         'work_type',
         'location',
         'availability',
+        'lat',
+        'long',
         'eshram',
         'aadhar',
         'bocw',

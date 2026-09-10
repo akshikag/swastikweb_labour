@@ -29,9 +29,16 @@
                     <v-btn color="green" class="mb-2" @click="callEmployer">
                         <v-icon left>mdi-phone</v-icon> Call
                     </v-btn>
-                    <v-btn color="orange" class="mb-2" @click="applyJob">
-                        <v-icon left>mdi-briefcase-check</v-icon> Apply
-                    </v-btn>
+                    <template v-if="job && job.has_applied">
+                        <v-btn color="grey" class="mb-2" disabled>
+                            <v-icon left>mdi-check-circle</v-icon> Applied
+                        </v-btn>
+                    </template>
+                    <template v-else>
+                        <v-btn color="orange" class="mb-2" @click="applyJob">
+                            <v-icon left>mdi-briefcase-check</v-icon> Apply
+                        </v-btn>
+                    </template>
                     <v-btn color="orange" @click="goToChat">
                         <v-icon left>mdi-chat</v-icon> Chat
                     </v-btn>
@@ -123,7 +130,8 @@ export default {
                     job_post_id: this.job.id,
                 });
                 alert('Success !!');
-                //console.log("Success:", res.data)
+                // mark as applied in UI
+                if (this.job) this.job.has_applied = true;
                 this.$router.push('/worker-dashboard-home-job-applied');
             } catch (err) {
                 alert(

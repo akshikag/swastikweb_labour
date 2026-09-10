@@ -45,7 +45,9 @@ class ChatApiTest extends TestCase
             ->assertJsonPath('data.message', 'Hello from worker');
 
         $this->assertDatabaseHas('chat_conversations', [
+            'sender_type' => 'worker',
             'sender_id' => $worker->id,
+            'receiver_type' => 'employer',
             'receiver_id' => $employer->id,
         ]);
 

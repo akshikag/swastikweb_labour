@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Skill;
 use Illuminate\Http\Request;
 use App\Models\WorkerHistory;
+use Illuminate\Support\Facades\Validator;
 
 class WorkerHistoryController extends Controller
 {
@@ -64,7 +65,7 @@ class WorkerHistoryController extends Controller
     public function store(Request $request)
     {
         try {
-            $data = $request->validate([
+            $rules = [
                 'worker_id' => 'required|exists:workers,id',
                 'employer_id' => 'nullable|exists:employers,id',
                 'employer_name'=> 'nullable|string|max:255',
@@ -81,7 +82,42 @@ class WorkerHistoryController extends Controller
                 'payment_status' => 'nullable|in:pending,paid,partial',
                 'remarks' => 'nullable|string',
                 'rating' => 'nullable|integer|min:1|max:5',
-            ]);
+            ];
+
+            $input = $request->all();
+
+            // If client sent an array of histories, validate and create all entries
+            if (is_array($input) && isset($input[0]) && is_array($input[0])) {
+                $created = [];
+                $errors = [];
+
+                foreach ($input as $idx => $item) {
+                    $validator = Validator::make($item, $rules);
+                    if ($validator->fails()) {
+                        $errors[$idx] = $validator->errors()->all();
+                        continue;
+                    }
+                    $created[] = WorkerHistory::create($validator->validated());
+                }
+
+                if (empty($created)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No valid records to create',
+                        'errors' => $errors
+                    ], 422);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Worker histories added successfully',
+                    'data' => $created,
+                    'errors' => $errors
+                ], 201);
+            }
+
+            // Single record
+            $data = $request->validate($rules);
 
             $history = WorkerHistory::create($data);
 

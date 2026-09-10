@@ -42,7 +42,7 @@ public function getEmployer($id)
 
 
         /* ------------- PROFILE PDF -------------- */
-
+ 
         $docPath = $uploadPath . '/docs/' . $profile->profile->pdf;
 
         if (!empty($profile->profile->pdf) && file_exists($docPath)) {
@@ -130,6 +130,39 @@ public function findNearbyWorkers(Request $request)
             $q->orderBy('distance', 'asc');
         })
         ->paginate($perPage, ['*'], 'page', $page);
+
+    // Ensure the frontend receives worker-level `id` (workers.id) and useful accessors
+    $workersCollection = $workers->getCollection();
+
+    $workersCollection->transform(function ($w) {
+        // If the frontend expects `id` to be the worker's id (not the profile id), map it
+        if (isset($w->worker_id)) {
+            $w->id = $w->worker_id;
+        }
+
+        // Profile image URL
+        $uploadPath = trim(env('UPLOAD_PATH_WORKER', 'upload/worker'), '/');
+        if (!empty($w->profile_image)) {
+            $w->profile_image_url = url($uploadPath . '/profile/' . $w->profile_image);
+        } else {
+            $w->profile_image_url = url('default/no-photos.png');
+        }
+
+        // Skill names (safe decode if skill_id stored as JSON string)
+        $ids = $w->skill_id;
+        if (is_string($ids)) {
+            $ids = json_decode($ids, true) ?: [];
+        }
+        if (empty($ids)) {
+            $w->skill_names = [];
+        } else {
+            $w->skill_names = \DB::table('skills')->whereIn('id', (array)$ids)->pluck('name')->toArray();
+        }
+
+        return $w;
+    });
+
+    $workers->setCollection($workersCollection);
 
     return response()->json([
         'success' => true,

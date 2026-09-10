@@ -6,7 +6,7 @@ use App\Models\Skill;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
-use App\Models\{JobPost,JobPostFacility,Employer};
+use App\Models\{JobPost,JobPostFacility,Employer,JobApplication};
 
 class EmployerJobpostController extends Controller
 {
@@ -42,6 +42,9 @@ class EmployerJobpostController extends Controller
                 'district'          => 'nullable|string',
                 'pincode'          => 'nullable|string|max:10',
 
+                'category'          => 'nullable|string',
+                'other_category'    => 'nullable|string',
+
                 'facilities'        => 'nullable|array', // facility IDs
             ]);
 
@@ -51,6 +54,15 @@ class EmployerJobpostController extends Controller
                     'message' => 'Validation failed',
                     'errors' => $validator->errors()
                 ], 422);
+            }
+
+            // Determine category: allow "Others" + custom name via `other_category`
+            $category = $request->category ?? null;
+            if ($request->other_category) {
+                $category = $request->other_category;
+            } else if ($category && in_array(strtolower($category), ['other', 'others'])) {
+                // if employer selected "other(s)" but didn't provide `other_category`, set null
+                $category = null;
             }
 
             // ⭐ First Create Job Post
@@ -64,6 +76,8 @@ class EmployerJobpostController extends Controller
                 'rate'              => $request->rate,
                 'job_type'          => $request->job_type,
                 'status'            => $request->status ?? 1,
+
+                'category'          => $category,
 
                 'tools_required'    => $request->tools_required,
                 'required_people'   => $request->required_people,
@@ -143,13 +157,22 @@ class EmployerJobpostController extends Controller
     }
 
 // Get single job post
-   public function show($id)
+   public function show(\Illuminate\Http\Request $request, $id)
     {
         try {
             // Load Job + Employer + Employer Profile (with accessor)
             $job = JobPost::with([
                 'employer.profile', 'facilities','state','district'  // loads profile and profile_image_url accessor
             ])->findOrFail($id);
+
+            // Determine if the current worker (or worker_id query param) has already applied
+            $workerId = $request->query('worker_id') ?? (auth('worker')->check() ? auth('worker')->id() : null);
+            $job->has_applied = false;
+            if ($workerId) {
+                $job->has_applied = JobApplication::where('worker_id', $workerId)
+                    ->where('job_post_id', $job->id)
+                    ->exists();
+            }
 
             return response()->json([
                 'status'  => true,
@@ -351,6 +374,9 @@ public function searchJobs(Request $request)
                 'district'          => 'nullable|string',
                 'pincode'          => 'nullable|string|max:10',
 
+                'category'          => 'nullable|string',
+                'other_category'    => 'nullable|string',
+
                 'facilities'        => 'nullable|array'
             ]);
 
@@ -385,11 +411,22 @@ public function searchJobs(Request $request)
 
                 'start_date'        => $request->start_date ?? $jobPost->start_date,
                 'end_date'          => $request->end_date ?? $jobPost->end_date,
-
                 'state'             => $request->state ?? $jobPost->state,
                 'district'          => $request->district ?? $jobPost->district,
                 'pincode'          => $request->pincode ?? $jobPost->pincode,
             ]);
+
+            // Handle category update after main update (so we don't overwrite unintentionally)
+            if ($request->has('category') || $request->has('other_category')) {
+                $category = $request->category ?? null;
+                if ($request->other_category) {
+                    $category = $request->other_category;
+                } else if ($category && in_array(strtolower($category), ['other', 'others'])) {
+                    $category = null;
+                }
+
+                $jobPost->update(['category' => $category]);
+            }
 
             if (!empty($request->facilities)) {
                 $jobPost->facilities()->sync($request->facilities);

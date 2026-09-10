@@ -10,11 +10,7 @@ class WorkerProfile extends Model
 {
     use HasFactory;
 
-    protected $casts = [
-        'skill_id' => 'array', // auto-convert JSON to PHP array
-    ];
-
-     protected $appends = ['profile_image_url','skill_names'];
+     protected $appends = ['profile_image_url','skill_names','combined_skill_names'];
 
 
     protected $fillable = [
@@ -37,6 +33,7 @@ class WorkerProfile extends Model
         'state',
         'pin_code',
         'profile_image',
+        'other_skills',
         'gender',
         'docType',
         'docNumber',
@@ -44,6 +41,11 @@ class WorkerProfile extends Model
         'rate',
         'lat',
         'long'
+    ];
+
+    protected $casts = [
+        'skill_id' => 'array',
+        'other_skills' => 'string',
     ];
 
    public function worker()
@@ -82,6 +84,18 @@ class WorkerProfile extends Model
             ->whereIn('id', $ids)
             ->pluck('name')
             ->toArray();
+    }
+
+    // Return combined skill names including any 'other_skills' entered by worker
+    public function getCombinedSkillNamesAttribute()
+    {
+        $names = $this->skill_names ?? [];
+        if (!empty($this->other_skills)) {
+            // split by comma and trim
+            $others = array_map('trim', explode(',', $this->other_skills));
+            $names = array_merge($names, $others);
+        }
+        return $names;
     }
 
     public function getProfileImageUrlAttribute()

@@ -4,7 +4,7 @@
         <!-- Messages area -->
         <div class="messages" ref="messagesContainer">
             <div v-for="msg in chat.messages" :key="msg.id"
-                :class="['message', msg.senderId === currentUser.id ? 'sent' : 'received']">
+                :class="['message', isCurrentUserMessage(msg) ? 'sent' : 'received']">
                 {{ msg.text }}
             </div>
         </div>
@@ -42,6 +42,11 @@ function scrollToBottom() {
     if (messagesContainer.value) {
         messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
     }
+}
+
+function isCurrentUserMessage(msg) {
+    return msg.senderId === props.currentUser.id
+        && (!msg.senderType || msg.senderType === props.currentUser.type)
 }
 
 function handleSend() {

@@ -32,6 +32,7 @@ class JobPost extends Model
     'long',
     'start_date',
     'end_date',
+    'category',
     'state',
     'district',
     'pincode',

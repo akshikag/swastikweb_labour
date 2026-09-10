@@ -1,5 +1,27 @@
 :root {
     --v-layout-top: 0px !important;
+    --app-font-family: 'Poppins', sans-serif;
+}
+
+html,
+body,
+#app,
+.v-application,
+button,
+input,
+textarea,
+select {
+    font-family: var(--app-font-family) !important;
+}
+
+/* Unified heading size across every screen. */
+h2 {
+    margin: 0 !important;
+    text-align: center !important;
+    font-size: clamp(20px, 6vw, 20px) !important;
+    font-weight: 800 !important;
+    line-height: 1.50 !important;
+    white-space: nowrap !important;
 }
 
 .v-main {

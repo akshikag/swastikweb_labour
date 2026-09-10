@@ -17,9 +17,22 @@ class WorkerController extends Controller
             'email' => 'nullable|email|unique:workers,email',
             'phone' => 'required|digits:10|unique:workers,phone',
             'password' => 'required|string|min:6|max:10',
+            'age' => 'nullable|integer|min:0',
+            'experience' => 'nullable|numeric|min:0',
         ]);
 
-        if ($validator->fails()) {
+        // Ensure age is greater than experience when both provided
+        $validator->after(function ($validator) use ($request) {
+            if ($request->filled('age') && $request->filled('experience')) {
+                $age = (int) $request->input('age');
+                $exp = (float) $request->input('experience');
+                if ($age <= $exp) {
+                    $validator->errors()->add('age', 'Age must be greater than experience');
+                }
+            }
+        });
+
+        if ($validator->fails()) { 
             return response()->json([
                 'status' => false,
                 'errors' => $validator->errors()
@@ -36,6 +49,7 @@ class WorkerController extends Controller
             'name' => $request->name,
             'worker_id' => $user->id,
             'skill_id' => array_values(array_filter($request->skill_id ?? [])),
+            'other_skills' => $request->other_skills ?? null,
         ]);
 
         $token = JWTAuth::fromUser($user);
@@ -107,7 +121,7 @@ class WorkerController extends Controller
             'age' => 'sometimes|integer|min:0',
             'gender' => 'sometimes|string|max:20',
             'skill_id' => 'sometimes|array',
-            'experience' => 'sometimes|string|max:100',
+            'experience' => 'sometimes|numeric|min:0',
             'work_type' => 'sometimes|string|max:100',
             'location' => 'sometimes|string|max:255',
             'availability' => 'sometimes|string|max:50',
@@ -125,6 +139,7 @@ class WorkerController extends Controller
             'docNumber' => 'sometimes|required|string|max:20',
             'pdf' => 'nullable|string',
             'rate' => 'nullable|string|max:50',
+            'other_skills' => 'nullable|string',
             'lat' => 'nullable|string',
             'long' => 'nullable|string',
         ]);
@@ -138,6 +153,18 @@ class WorkerController extends Controller
                 'status' => false,
                 'errors' => $validator->errors()
             ], 422);
+        }
+
+        // Additional check: if both age and experience provided, age must be greater than experience
+        if ($request->filled('age') && $request->filled('experience')) {
+            $age = (int) $request->input('age');
+            $exp = (float) $request->input('experience');
+            if ($age <= $exp) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => ['age' => ['Age must be greater than experience']]
+                ], 422);
+            }
         }
 
         // ✅ Update Worker basic info
@@ -159,6 +186,10 @@ class WorkerController extends Controller
 
             if ($request->has('skill_id')) {
                 $profile->skill_id = array_values(array_filter($request->skill_id ?? []));
+            }
+
+            if ($request->has('other_skills')) {
+                $profile->other_skills = trim((string) $request->other_skills);
             }
 
             // ✅ Upload directories from .env

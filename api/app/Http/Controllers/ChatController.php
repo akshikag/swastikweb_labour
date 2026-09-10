@@ -33,7 +33,7 @@ class ChatController extends Controller
     public function show(Request $request, $peerId)
     {
         $currentUser = Auth::user();
-        $peer = $this->resolvePeer($peerId);
+        $peer = $this->resolvePeer($currentUser, $peerId);
 
         if (! $peer) {
             return response()->json([
@@ -58,7 +58,7 @@ class ChatController extends Controller
         ]);
 
         $currentUser = Auth::user();
-        $peer = $this->resolvePeer($request->input('peer_id'));
+        $peer = $this->resolvePeer($currentUser, $request->input('peer_id'));
 
         if (! $peer) {
             return response()->json([
@@ -156,14 +156,16 @@ class ChatController extends Controller
         ];
     }
 
-    protected function resolvePeer($peerId)
+    /**
+     * A chat always joins a worker with an employer. IDs are generated
+     * independently for those tables, so looking in both tables by ID can
+     * accidentally resolve the current worker instead of the employer.
+     */
+    protected function resolvePeer($currentUser, $peerId)
     {
-        $worker = Worker::find($peerId);
-        if ($worker) {
-            return $worker;
-        }
-
-        return Employer::find($peerId);
+        return $this->resolveUserType($currentUser) === 'worker'
+            ? Employer::find($peerId)
+            : Worker::find($peerId);
     }
 
     protected function resolveDisplayName($user)

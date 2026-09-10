@@ -15,12 +15,12 @@
                                     justify-content: center;
                                     align-items: center;
                                 ">
-                        <img src="../assets/bharat.jpg" alt="India Flag"
+                        <img src="../assets/himachal-emblem.png" alt="Himachal Pradesh government emblem"
                             style="width: 28px; height: 28px; object-fit: cover;" />
                     </div>
                     <div style="line-height: 1;">
-                        <div style="font-weight: 700; font-size: 14px;">भारत सरकार</div>
-                        <div style="font-size: 12px;">Govt. of India</div>
+                        <div style="font-weight: 700; font-size: 14px;">Govt. of Himachal Pradesh</div>
+                        <div style="font-size: 12px;">हिमाचल प्रदेश सरकार</div>
                     </div>
                 </v-col>
                 <!-- 🔹 Push right side -->

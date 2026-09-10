@@ -74,12 +74,15 @@ Route::prefix('facilities')->group(function () {
 });
 
 //-----------------------------------------------------------------------------------------------
-//worker apis
-Route::middleware(['auth:worker'])->group(function () {
-
+// Chat is shared by authenticated workers and employers.
+Route::middleware(['auth:worker,employer'])->group(function () {
 Route::get('/chat/conversations', [ChatController::class, 'conversations']);
 Route::get('/chat/conversations/{peerId}', [ChatController::class, 'show']);
 Route::post('/chat/messages', [ChatController::class, 'send']);
+});
+
+//worker apis
+Route::middleware(['auth:worker'])->group(function () {
 
 Route::put('/worker/update/{id}', [WorkerController::class, 'updateWorker']);
 Route::get('/get-worker/{id}', [WorkerController::class, 'getWorker']);
@@ -110,10 +113,6 @@ Route::get('/worker/show/{id}', [EmployerJobpostController::class, 'show']);
 // employer apis
 //---------------------------------------------------------------------------------------------
 Route::middleware(['auth:employer'])->group(function () {
-
-    Route::get('/chat/conversations', [ChatController::class, 'conversations']);
-    Route::get('/chat/conversations/{peerId}', [ChatController::class, 'show']);
-    Route::post('/chat/messages', [ChatController::class, 'send']);
 
     Route::put('/employer/update/{id}', [EmployerController::class, 'updateEmployer']);
     Route::post('/employer/change-password', [EmployerController::class, 'changePassword']);

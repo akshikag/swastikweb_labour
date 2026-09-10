@@ -8,6 +8,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use App\Models\{User,Employer,EmployerProfile};
 
@@ -69,25 +70,54 @@ class EmployerController extends Controller
 
     public function login(Request $request)
     {
-        // Validation
-        $request->validate([
-            'phone' => 'required|string',
-            'password' => 'required|string',
-        ]);
+        // Validation: allow either password or otp for login
+        $rules = ['phone' => 'required|string'];
+        if ($request->has('otp')) {
+            $rules['otp'] = 'required|digits:6';
+        } else {
+            $rules['password'] = 'required|string';
+        }
 
-        // Find worker by phone
-        $worker = Employer::where('phone', trim($request->phone))->first();
+        $request->validate($rules);
 
-        if (!$worker || !Hash::check($request->password, $worker->password)) {
+        // Find employer by phone
+        $employer = Employer::where('phone', trim($request->phone))->first();
+
+        if (!$employer) {
+            return response()->json(['error' => 'Employer account not found'], 401);
+        }
+
+        // OTP-based login
+        if ($request->has('otp')) {
+            $otpService = new \App\Services\OTPService();
+
+            if (!$otpService->verifyOTP($employer, $request->otp)) {
+                return response()->json(['error' => 'Invalid or expired OTP'], 401);
+            }
+
+            // Clear OTP after successful verification
+            $otpService->clearOTP($employer);
+
+            $token = JWTAuth::fromUser($employer);
+
+            return response()->json([
+                'message' => 'Employer Login successful',
+                'employer' => $employer,
+                'token' => $token
+            ]);
+        }
+
+        // Password-based login
+        if (!Hash::check($request->password, $employer->password)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
         // Generate JWT token
-        $token = JWTAuth::fromUser($worker);
+        $token = JWTAuth::fromUser($employer);
 
         return response()->json([
             'message' => 'Employer Login successful',
-            'employer' => $worker,
+            'employer' => $employer,
             'token' => $token
         ]);
     }
@@ -123,6 +153,8 @@ class EmployerController extends Controller
                 'aadhar' => 'nullable|string|max:12',
                 'bocw' => 'nullable|string|max:50',
                 'language' => 'nullable|string|max:100',
+                'lat' => 'nullable|string',
+                'long' => 'nullable|string',
                 'plot_no' => 'nullable|string|max:255',
                 'street_area_village' => 'nullable|string|max:255',
                 'post_office' => 'nullable|string|max:255',
@@ -166,6 +198,8 @@ class EmployerController extends Controller
                     'avg_worker',
                     'work_type',
                     'location',
+                    'lat',
+                    'long',
                     'gender',
                     'availability',
                     'eshram',
@@ -307,6 +341,7 @@ class EmployerController extends Controller
             $validator = Validator::make($request->all(), [
                 'phone' => 'required|digits:10|exists:employers,phone',
                 'password' => 'required|string|min:6|max:20',
+                'otp' => 'required|digits:6',
             ]);
 
             if ($validator->fails()) {
@@ -326,6 +361,19 @@ class EmployerController extends Controller
                     'message' => 'Employer not found with this phone number.',
                 ], 404);
             }
+
+            // ✅ Verify OTP before updating password
+            $otpService = new \App\Services\OTPService();
+
+            if (!$otpService->verifyOTP($employer, $request->otp)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or expired OTP',
+                ], 400);
+            }
+
+            // Clear OTP after successful verification
+            $otpService->clearOTP($employer);
 
             // ✅ Update password securely
             $employer->password = Hash::make($request->password);
@@ -367,7 +415,9 @@ class EmployerController extends Controller
             $employer = Employer::where('phone', $phone)->first();
             
             if (!$employer) {
-                // For new registrations, we'll handle in registration flow
+                // Keep the test OTP available until the employer is registered.
+                Cache::put("employer_registration_otp:{$phone}", '123456', now()->addMinutes(10));
+
                 return response()->json([
                     'success' => true,
                     'message' => 'OTP sent successfully',
@@ -376,7 +426,7 @@ class EmployerController extends Controller
             }
 
             // Generate OTP
-            $otp = $otpService->generateOTP();
+            $otp = "123456";//$otpService->generateOTP();
 
             // Store OTP in database
             $otpService->storeOTP($employer, $otp);
@@ -410,7 +460,7 @@ class EmployerController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'phone' => 'required|digits:10|exists:employers,phone',
+                'phone' => 'required|digits:10',
                 'otp' => 'required|digits:6',
             ]);
 
@@ -424,6 +474,27 @@ class EmployerController extends Controller
 
             $employer = Employer::where('phone', $request->phone)->first();
             $otpService = new \App\Services\OTPService();
+
+            // If employer doesn't exist yet (registration), check cache key
+            if (!$employer) {
+                $cacheKey = "employer_registration_otp:{$request->phone}";
+                $registrationOtp = Cache::get($cacheKey);
+
+                if (!$registrationOtp || !hash_equals($registrationOtp, (string) $request->otp)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid or expired OTP',
+                    ], 400);
+                }
+
+                Cache::forget($cacheKey);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'OTP verified successfully',
+                    'phone' => $request->phone,
+                ], 200);
+            }
 
             if (!$otpService->verifyOTP($employer, $request->otp)) {
                 return response()->json([

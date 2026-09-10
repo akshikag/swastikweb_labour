@@ -54,6 +54,8 @@ const form = ref({
     district: "",
     state: "",
     pincode: "",
+    lat: "",
+    long: "",
 });
 
 const states = ref([]);
@@ -79,6 +81,10 @@ async function populateAddressFromCoordinates(lat, lng) {
         .filter((value, index, values) => values.indexOf(value) === index)
         .join(", ");
     form.value.pincode = address.pincode || "";
+
+    // store raw coordinates as strings
+    form.value.lat = String(lat);
+    form.value.long = String(lng);
 
     const stateName = String(address.state || "").trim().toLowerCase();
     const stateCode = Number(address.sttLgdCd || address.stateLgdCode);
@@ -153,6 +159,8 @@ async function submitForm() {
             district: form.value.district.toString(),
             state: form.value.state.toString(),
             pin_code: form.value.pincode,
+            lat: form.value.lat,
+            long: form.value.long,
         });
 
         console.log("Success:", res.data)
@@ -230,6 +238,8 @@ async function getData() {
             // district: data.profile?.district || '',
             state: parseInt(data.profile?.state) || '',
             pincode: data.profile?.pin_code || '',
+            lat: data.profile?.lat || '',
+            long: data.profile?.long || '',
         };
 
         await getDistrict(form.value.state);

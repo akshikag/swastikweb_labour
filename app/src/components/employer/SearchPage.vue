@@ -1,44 +1,40 @@
 <template>
     <LogoutAppBar />
 
-    <v-container class="pa-4">
+    <v-container class="employer-search-page" fluid>
         <!-- Title -->
-        <h2 class="text-center mb-4">Find Nearby Workers</h2>
+        <h2 class="search-page-title">Find Work/Jobs</h2>
 
         <!-- Filters -->
-        <v-row dense>
+        <v-row class="search-filters" dense>
             <v-col cols="6">
-                <v-text-field v-model="filters.location" label="Location" prepend-inner-icon="mdi-map-marker"
-                    variant="outlined" density="compact" hide-details />
+                <div class="search-filter-field"><span class="filter-icon"><v-icon>mdi-map-marker</v-icon></span><div class="filter-control"><label>Location</label><v-text-field v-model="filters.location" placeholder="Enter location" variant="outlined" density="compact" hide-details /></div></div>
             </v-col>
 
             <v-col cols="6">
-                <v-text-field v-model="filters.pincode" label="Pincode" prepend-inner-icon="mdi-map-marker"
-                    variant="outlined" density="compact" hide-details />
+                <div class="search-filter-field"><span class="filter-icon"><v-icon>mdi-map-marker</v-icon></span><div class="filter-control"><label>Pincode</label><v-text-field v-model="filters.pincode" placeholder="Enter pincode" variant="outlined" density="compact" hide-details /></div></div>
             </v-col>
 
             <v-col cols="6">
-                <v-select v-model="filters.skill" :items="skills" label="Select Skill" item-title="name" item-value="id"
-                    prepend-inner-icon="mdi-briefcase" variant="outlined" density="compact" hide-details clearable />
+                <div class="search-filter-field"><span class="filter-icon"><v-icon>mdi-briefcase</v-icon></span><div class="filter-control"><label>Select Skill</label><v-select v-model="filters.skill" :items="skills" item-title="name" item-value="id" placeholder="Choose Skill" variant="outlined" density="compact" hide-details clearable /></div></div>
             </v-col>
             <v-col cols="6">
-                <v-select v-model="filters.range" :items="ranges" item-title="name" item-value="id" label="Range (km)"
-                    prepend-inner-icon="mdi-ruler" variant="outlined" density="compact" clearable />
+                <div class="search-filter-field"><span class="filter-icon"><v-icon>mdi-ruler</v-icon></span><div class="filter-control"><label>Range (km)</label><v-select v-model="filters.range" :items="ranges" item-title="name" item-value="id" placeholder="Select range" variant="outlined" density="compact" hide-details clearable /></div></div>
             </v-col>
         </v-row>
 
         <!-- Range Filter -->
-        <v-row class="align-center mb-3 mt-2">
+        <v-row class="search-actions align-center mb-3 mt-2">
             <v-col cols="8" class="text-right">
                 <v-btn color="primary" prepend-icon="mdi-magnify" class="w-100" @click="filterWorkers">
-                    Search
+                    SEARCH
                 </v-btn>
             </v-col>
             <v-col cols="4" class="text-right">
                 <!-- Toggle View -->
                 <v-btn variant="tonal" color="primary" @click="toggleMap">
                     <v-icon left>{{ showMap ? 'mdi-format-list-bulleted' : 'mdi-map' }}</v-icon>
-                    {{ showMap ? 'List View' : 'Map View' }}
+                    {{ showMap ? 'LIST VIEW' : 'MAP VIEW' }}
                 </v-btn>
             </v-col>
         </v-row>
@@ -52,7 +48,7 @@
         <!-- List View -->
         <v-row dense v-show="!showMap">
             <v-col v-for="worker in workers" :key="worker.id" cols="12" sm="6" md="4">
-                <v-card class="pa-3 rounded-lg" elevation="2">
+                <v-card class="worker-result-card" elevation="0">
                     <v-row align="center" no-gutters>
                         <!-- Avatar -->
                         <v-col cols="auto">
@@ -451,12 +447,9 @@ export default {
 </script>
 
 <style scoped>
-.v-card {
-    transition: 0.2s ease;
-}
-
-.v-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
-}
+.employer-search-page{min-height:calc(100vh - 64px);padding:16px 15px 92px!important;background:#fff url('@/assets/authenticated-background.png') center/100% 100% no-repeat;color:#142b58}.search-page-title{margin:4px 0 18px;color:#171d2b;font-size:25px;font-weight:800;text-align:center}.search-filters{width:100%;margin:0 auto}.search-filters :deep(.v-col){padding:3px!important}.search-filters :deep(.v-field){min-height:41px;border:1px solid #aeb9c8;border-radius:5px;background:#fff}.search-filters :deep(.v-field__input){min-height:39px;padding-inline:10px;font-size:16px}.search-filters :deep(.v-label){font-size:15px;color:#777}.search-filters :deep(.v-field__prepend-inner){color:#7c7c7c;padding-right:5px}.search-filters :deep(.v-field__append-inner){color:#777}.search-actions{margin:12px 0 16px!important}.search-actions :deep(.v-col){padding:3px!important}.search-actions .v-btn{height:37px!important;border-radius:4px;font-size:14px;font-weight:800;letter-spacing:.5px}.search-actions .v-btn:first-child{background:#167cd5!important;color:#fff}.search-actions .v-btn:last-child{background:#e5f1fc!important;color:#1269b7}.worker-result-card{min-height:126px;padding:10px 12px;border:1px solid #d8d8d8;border-radius:9px!important;background:#fffffff5!important;box-shadow:0 2px 5px #0000001c!important;transition:transform .18s,box-shadow .18s}.worker-result-card:hover{transform:translateY(-2px);box-shadow:0 6px 14px #00000022!important}.worker-result-card :deep(.v-avatar){flex:0 0 auto}.worker-result-card :deep(.v-col){padding:0}.worker-result-card :deep(.pl-3){padding-left:12px!important}.worker-result-card h4{color:#343434;font-size:16px!important;font-weight:500}.worker-result-card p{margin:2px 0!important;color:#444;font-size:12px;line-height:1.45}.worker-result-card .v-btn{width:40px;height:40px;background:#147bd6!important;box-shadow:0 3px 7px #0b579c3d}.worker-result-card .v-btn .v-icon{color:#fff;font-size:25px}.employer-search-page :deep(#mapContainer){border:1px solid #bdd2e7;box-shadow:0 3px 10px #163f6b1c}.employer-search-page .v-progress-circular{margin-top:25px}
+@media(min-width:651px){.employer-search-page{padding:28px 24px 110px!important}.search-page-title{font-size:34px}.search-filters,.search-actions{max-width:900px}.worker-result-card{max-width:900px;margin:0 auto}}
+@media(max-width:390px){.employer-search-page{padding-inline:10px!important}.search-page-title{font-size:23px;margin-bottom:14px}.search-filters :deep(.v-field__input){font-size:14px}.search-actions .v-btn{font-size:12px}.worker-result-card p{font-size:11px}}
+.search-page-title{margin:6px 0 22px;color:#0a2255;font-size:30px;font-weight:800;letter-spacing:-.8px}.search-page-title:after{content:'◇';display:block;margin:4px auto 0;color:#546d99;font-size:18px;font-weight:400;line-height:1}.search-filter-field{display:flex;align-items:center;gap:8px;min-height:62px;padding:7px 8px;border:1px solid #b9dcff;border-radius:10px;background:#fff;box-shadow:0 5px 12px #1676d218}.filter-icon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:9px;background:#e1f1ff;color:#086aca}.filter-icon .v-icon{font-size:22px}.filter-control{flex:1;min-width:0}.filter-control label{display:block;margin:0 0 1px;color:#1c345f;font-size:12px;font-weight:700;line-height:1.1;text-align:left}.filter-control :deep(.v-field){min-height:26px;border:0!important;border-radius:0;background:transparent;box-shadow:none}.filter-control :deep(.v-field__outline){display:none}.filter-control :deep(.v-field__input){min-height:25px;padding:0!important;color:#1d3d70;font-size:12px}.filter-control :deep(.v-field__input input::placeholder){color:#8294ae;opacity:1}.filter-control :deep(.v-field__append-inner){padding:0;color:#0870d5}.filter-control :deep(.v-field__clearable){display:none}.search-actions{margin-top:16px!important}.search-actions .v-btn:first-child{background:#087fe5!important}.search-actions .v-btn:last-child{background:#e4f2ff!important;color:#086ac4!important}.search-actions .v-btn .v-icon{font-size:22px}
+@media(max-width:390px){.search-page-title{font-size:29px;margin-bottom:20px}.search-filter-field{min-height:62px}.filter-icon{flex-basis:34px;width:34px}.filter-control label{font-size:12px}.filter-control :deep(.v-field__input){font-size:12px}.search-actions{margin-top:17px!important}.search-actions .v-btn{height:49px!important;font-size:13px}}
 </style>
