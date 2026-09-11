@@ -36,6 +36,7 @@ use App\Http\Controllers\ChatController;
 
 Route::post('/worker/register', [WorkerController::class, 'register']);
 Route::post('/worker/login', [WorkerController::class, 'login'])->name('login');
+Route::post('/worker/check-phone', [WorkerController::class, 'checkPhone']);
 Route::post('/worker/send-otp', [WorkerController::class, 'sendOTP'])->name('send-otp');
 Route::post('/worker/verify-otp', [WorkerController::class, 'verifyOTP'])->name('verify-otp');
 Route::post('/worker/forgot-password', [WorkerController::class, 'forgotPassword'])->name('forgot-password');

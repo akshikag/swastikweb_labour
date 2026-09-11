@@ -1,16 +1,33 @@
 <template>
     <BackButtonAppBar />
-    <main class="identity-page">
-      <div class="identity-heading"><h1>पहचान और सत्यापन - <span>Identity &amp;<br class="mobile-break" /> Verification</span></h1><div class="heading-rule"><i></i></div></div>
-      <v-form class="identity-form-card" @submit.prevent="submitForm">
-        <v-alert class="pending-alert" type="info" variant="tonal" color="primary"><strong>सत्यापन लंबित - Verification Pending</strong></v-alert>
-        <div class="identity-field"><span class="identity-icon"><v-icon icon="mdi-file-document" /></span><div class="identity-control"><label>दस्तावेज़ प्रकार - Document Type <b>*</b></label><v-select v-model="form.docType" :items="docTypes" item-title="title" item-value="value" placeholder="Select document type" variant="outlined" hide-details required /></div></div>
-        <div class="identity-field"><span class="identity-icon"><v-icon icon="mdi-pound" /></span><div class="identity-control"><label>दस्तावेज़ नंबर - Document Number <b>*</b></label><v-text-field v-model="form.docNumber" placeholder="Enter document number" variant="outlined" hide-details :rules="[validateDocumentNumber]" @update:model-value="normalizeDocumentNumber" /></div></div>
-        <div class="identity-field"><span class="identity-icon"><v-icon icon="mdi-upload" /></span><div class="identity-control"><label>दस्तावेज़ अपलोड करें - Upload Document</label><v-file-input v-model="form.pdfFile" accept=".pdf" placeholder="Click to upload or drag and drop" hint="PDF (Max 2 MB)" persistent-hint prepend-icon="" prepend-inner-icon="" variant="outlined" hide-details="auto" :rules="[fileSizeRule, fileTypeRule]" /></div></div>
-        <div class="identity-field"><span class="identity-icon"><v-icon icon="mdi-card-account-details" /></span><div class="identity-control"><label>e-Shram Card Number</label><v-text-field v-model="form.labourLicence" placeholder="Enter e-Shram Card Number" variant="outlined" hide-details /></div></div>
-        <v-btn class="identity-save" type="submit" block>Save <v-icon end icon="mdi-arrow-right" /></v-btn>
-      </v-form>
-    </main>
+    <v-container class="fill-height d-flex align-center justify-center" fluid>
+        <v-row>
+            <v-col cols="12" class="text-center mb-4">
+                <!-- Identity & Verification -->
+                <v-card outlined class="pa-4 mb-4">
+                    <h4 class="mb-3">पहचान और सत्यापन - Identity & Verification</h4>
+                    <v-alert type="info" variant="tonal" color="orange">
+                        सत्यापन लंबित - Verification Pending
+                    </v-alert>
+
+                    <v-select label="दस्तावेज़ प्रकार - Document Type *" v-model="form.docType" :items="docTypes"
+                        item-title="title" item-value="value" color="primary" required></v-select>
+
+                    <v-text-field label="दस्तावेज़ नंबर - Document Number *" v-model="form.docNumber" dense
+                        outlined :rules="[validateDocumentNumber]" @update:model-value="normalizeDocumentNumber"></v-text-field>
+
+                    <v-file-input v-model="form.pdfFile" label="दस्तावेज़ अपलोड करें - Upload Document"
+                        prepend-icon="mdi-upload" dense outlined accept=".pdf"
+                        :rules="[fileSizeRule, fileTypeRule]"></v-file-input>
+
+                    <v-text-field label="e-Shram Card Number" v-model="form.labourLicence" dense
+                        outlined></v-text-field>
+
+                    <v-btn block color="primary" large @click="submitForm">Save </v-btn>
+                </v-card>
+            </v-col>
+        </v-row>
+    </v-container>
 </template>
 
 <script setup>
@@ -190,6 +207,4 @@ const toBase64 = (file) => {
 
 </script>
 
-<style scoped>
-.identity-page{min-height:calc(100vh - 100px);padding:28px 18px 100px;color:#082566;background:#fff url('@/assets/authenticated-background.png') center/100% 100% no-repeat}.identity-heading{text-align:center;margin:3px auto 28px}.identity-heading h1{margin:0;color:#102966;font-size:clamp(28px,4vw,48px);font-weight:800;line-height:1.18}.identity-heading h1 span{color:#102966}.heading-rule{display:flex;justify-content:center;align-items:center;width:285px;margin:18px auto 0;border-top:2px solid #0b68d7}.heading-rule i{width:17px;height:17px;border:2px solid #0b68d7;background:#fff;transform:rotate(45deg)}.identity-form-card{width:min(870px,100%);margin:0 auto;padding:34px 32px 28px;border:1px solid #a9d5ff;border-radius:23px;background:#fffffff2;box-shadow:0 8px 24px #1676d21c}.pending-alert{margin-bottom:28px;border:1px solid #8bc7ff!important;border-radius:13px!important;background:#e9f5ff!important;color:#0962d4!important;font-size:clamp(20px,2.3vw,29px)}.identity-field{display:flex;align-items:flex-start;gap:28px;margin-bottom:22px;padding:22px 24px;border:1px solid #c3e1ff;border-radius:17px;background:#ffffffe6}.identity-icon{display:grid;place-items:center;flex:0 0 76px;width:76px;height:76px;border-radius:16px;color:#0869d8;background:#e3f2ff}.identity-icon .v-icon{font-size:42px}.identity-control{flex:1;min-width:0}.identity-control label{display:block;margin:0 0 8px;color:#123881;font-size:clamp(20px,2.3vw,29px);font-weight:800}.identity-control label b{color:#f02727}.identity-control :deep(.v-field){border-radius:12px;background:#f1f8ff}.identity-control :deep(.v-field__input){min-height:58px;padding-inline:28px;font-size:20px;color:#183e7a}.identity-control :deep(.v-field__prepend-inner){display:none}.identity-save{height:66px!important;border-radius:14px;background:linear-gradient(110deg,#1688ed,#0867d6)!important;color:#fff;font-size:28px;font-weight:800}.identity-save .v-icon{font-size:34px}@media(max-width:650px){.identity-page{padding:20px 10px 90px}.identity-heading{margin-bottom:18px}.identity-heading h1{font-size:25px}.identity-form-card{padding:18px 10px;border-radius:18px}.pending-alert{margin-bottom:14px;font-size:16px}.identity-field{gap:12px;margin-bottom:12px;padding:12px 10px;border-radius:13px}.identity-icon{flex-basis:42px;width:42px;height:42px;border-radius:10px}.identity-icon .v-icon{font-size:24px}.identity-control label{margin-bottom:4px;font-size:15px}.identity-control :deep(.v-field__input){min-height:30px!important;padding-inline:14px!important;font-size:14px!important}.identity-save{height:52px!important;font-size:17px!important}.mobile-break{display:block}}
-</style>
+<style></style>

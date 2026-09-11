@@ -1,15 +1,15 @@
 <template>
-    <v-app-bar v-if="false" color="primary" dark flat style="position: sticky;" class="pb-2 pt-4 px-2">
+    <v-app-bar color="primary" dark flat style="position: sticky;" class="pb-2 pt-4 px-2">
         <v-row align="center" class="fill-height" no-gutters>
             <v-col class="d-flex align-center ms-2 mt-2" cols="auto" style="gap: 12px;">
                 <div style="width: 32px;height: 32px;border: 2px solid white;border-radius: 50%;overflow: hidden;
                         display: flex;justify-content: center;align-items: center;">
-                    <img src="@/assets/himachal-emblem.png" alt="Himachal Pradesh government emblem"
+                    <img src="@/assets/bharat.jpg" alt="India Flag"
                         style="width: 28px; height: 28px; object-fit: cover;" />
                 </div>
                 <div style="line-height: 1;">
-                    <div style="font-weight: 700; font-size: 14px;">Govt. of Himachal Pradesh</div>
-                    <div style="font-size: 12px;">हिमाचल प्रदेश सरकार</div>
+                    <div style="font-weight: 700; font-size: 14px;">भारत सरकार</div>
+                    <div style="font-size: 12px;">Govt. of India</div>
                 </div>
             </v-col>
         </v-row>
@@ -17,19 +17,40 @@
             <v-icon>mdi-arrow-left-bold</v-icon>
         </v-btn>
     </v-app-bar>
-    <BackButtonAppBar />
-    <main class="basic-page">
-      <div class="basic-heading"><h1>Basic <span>Information</span></h1><div class="heading-rule"><i></i></div><p>सुरक्षित श्रमशक्ति - समृद्ध हिमाचल</p></div>
-      <v-form class="basic-form-card" @submit.prevent="submitForm">
-        <div class="field-row"><span class="field-icon"><v-icon icon="mdi-account" /></span><div class="field-control"><label>Full Name <b>*</b></label><v-text-field v-model="form.name" placeholder="Enter your full name" variant="outlined" hide-details /></div></div>
-        <div class="field-row"><span class="field-icon"><v-icon icon="mdi-calendar-month" /></span><div class="field-control"><label>Age (in Years) <b>*</b></label><v-text-field v-model="form.age" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Enter age" variant="outlined" hide-details @keydown="preventInvalidAgeInput" @input="sanitizeAgeInput" /></div></div>
-        <div class="field-row"><span class="field-icon"><v-icon icon="mdi-gender-male-female" /></span><div class="field-control"><label>Gender <b>*</b></label><v-radio-group v-model="form.gender" inline hide-details><v-radio label="Male" value="male" /><v-radio label="Female" value="female" /><v-radio label="Other" value="other" /></v-radio-group></div></div>
-        <div class="field-row"><span class="field-icon"><v-icon icon="mdi-phone" /></span><div class="field-control"><label>Mobile Number <b>*</b></label><v-text-field v-model="form.mobile" placeholder="Enter mobile number" variant="outlined" hide-details /></div></div>
-        <div class="field-row"><span class="field-icon"><v-icon icon="mdi-email" /></span><div class="field-control"><label>Email (Optional)</label><v-text-field v-model="form.email" placeholder="Enter email address" variant="outlined" hide-details /></div></div>
-        <div class="field-row upload-row"><span class="field-icon"><v-icon icon="mdi-camera" /></span><div class="field-control"><label>Upload Profile Image</label><v-file-input v-model="form.image" accept="image/*" prepend-icon="" prepend-inner-icon="mdi-cloud-upload" placeholder="Click to upload" hint="JPG, PNG (Max 2 MB)" persistent-hint variant="outlined" show-size hide-details="auto" @update:model-value="handleFileChange" /><v-avatar v-if="form.imageUrl" size="70" class="preview-avatar"><v-img :src="form.imageUrl" cover /></v-avatar></div></div>
-        <v-btn class="save-button" type="submit" block>Save <v-icon end icon="mdi-arrow-right" /></v-btn>
-      </v-form>
-    </main>
+    <v-container class="fill-height d-flex align-center justify-center" fluid>
+        <v-row>
+            <v-col cols="12" class="text-center mb-4">
+                <v-card outlined class="pa-4 mb-4">
+                    <h4 class="mb-3">बुनियादी जानकारी - Basic Information</h4>
+
+                    <v-text-field label="Full Name" v-model="form.name" />
+                    <v-text-field label="Age in Years" type="text" v-model="form.age" inputmode="numeric" pattern="[0-9]*"
+                        @keydown="preventInvalidAgeInput" @input="sanitizeAgeInput" />
+                    <v-radio-group v-model="form.gender" label="Gender">
+                        <v-radio label="Male" value="male" />
+                        <v-radio label="Female" value="female" />
+                        <v-radio label="Other" value="other" />
+                    </v-radio-group>
+                    <v-text-field label="Mobile Number" v-model="form.mobile" />
+                    <v-text-field label="Email (optional)" v-model="form.email" />
+
+
+                    <!-- User Image Upload -->
+                    <!-- Image Upload Direct -->
+                    <v-file-input v-model="form.image" accept="image/*" label="Upload Profile Image"
+                        prepend-icon="mdi-camera" show-size @update:model-value="handleFileChange" outlined dense></v-file-input>
+
+                    <!-- Preview -->
+                    <v-avatar size="120" class="my-3">
+                        <v-img v-if="form.imageUrl" :src="form.imageUrl" cover />
+                        <v-icon v-else size="64" color="grey">mdi-account</v-icon>
+                    </v-avatar>
+
+                    <v-btn block color="primary" large @click="submitForm">Save </v-btn>
+                </v-card>
+            </v-col>
+        </v-row>
+    </v-container>
 </template>
 
 <script setup>
@@ -212,8 +233,4 @@ function validateForm() {
 
 </script>
 
-<style scoped>
-.basic-page{min-height:calc(100vh - 100px);padding:28px 18px 100px;color:#082566;background:#fff url('@/assets/authenticated-background.png') center/100% 100% no-repeat}.basic-heading{text-align:center;margin:4px auto 26px}.basic-heading h1{margin:0;font-size:clamp(34px,5vw,56px);font-weight:800;color:#102966}.basic-heading h1 span{color:#0878df}.basic-heading p{margin:14px 0 0;font-size:clamp(19px,2.5vw,29px);font-weight:500}.heading-rule{display:flex;justify-content:center;align-items:center;width:250px;margin:13px auto 0;border-top:2px solid #0b68d7}.heading-rule i{width:16px;height:16px;border:2px solid #0b68d7;background:#fff;transform:rotate(45deg)}.basic-form-card{width:min(870px,100%);margin:0 auto;padding:34px 32px 28px;border:1px solid #a9d5ff;border-radius:23px;background:#fffffff2;box-shadow:0 8px 24px #1676d21c}.field-row{display:flex;align-items:flex-start;gap:28px;margin-bottom:22px}.field-icon{display:grid;place-items:center;flex:0 0 76px;width:76px;height:76px;margin-top:4px;border-radius:16px;color:#0869d8;background:#e3f2ff}.field-icon .v-icon{font-size:42px}.field-control{flex:1;min-width:0}.field-control label{display:block;margin:0 0 8px;font-size:clamp(21px,2.4vw,30px);font-weight:800;color:#123881}.field-control label b{color:#f02727}.field-control :deep(.v-field){border-radius:12px;background:#f1f8ff}.field-control :deep(.v-field__input){min-height:58px;padding-inline:28px;font-size:21px;color:#183e7a}.field-control :deep(.v-label){color:#7890b4}.field-control :deep(.v-selection-control-group){justify-content:space-between}.field-control :deep(.v-radio){margin-inline-end:20px}.field-control :deep(.v-radio .v-label){font-size:20px;color:#102e68;opacity:1}.upload-row .field-control :deep(.v-field){min-height:100px;border:1px dashed #79baff}.upload-row .field-control :deep(.v-field__input){align-items:center}.preview-avatar{margin-top:10px}.save-button{height:66px!important;border-radius:14px;background:linear-gradient(110deg,#1688ed,#0867d6)!important;color:#fff;font-size:28px;font-weight:800;letter-spacing:.4px}.save-button .v-icon{font-size:34px}@media(max-width:650px){.basic-page{padding:20px 10px 90px}.basic-heading{margin-bottom:18px}.basic-heading h1{font-size:34px}.basic-heading p{font-size:18px}.basic-form-card{padding:22px 12px 18px;border-radius:18px}.field-row{gap:12px;margin-bottom:14px}.field-icon{flex-basis:42px;width:42px;height:42px;margin-top:2px;border-radius:11px}.field-icon .v-icon{font-size:24px}.field-control label{font-size:18px;margin-bottom:4px}.field-control :deep(.v-field__input){min-height:44px;padding-inline:14px;font-size:16px}.field-control :deep(.v-radio .v-label){font-size:15px}.field-control :deep(.v-radio){margin-inline-end:4px}.save-button{height:52px!important;font-size:22px}}
-.save-button{height:52px !important;font-size:17px !important}
-.upload-row :deep(.v-input__prepend),.upload-row :deep(.v-field__prepend-inner){display:none !important}
-</style>
+<style></style>
