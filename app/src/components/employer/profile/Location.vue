@@ -1,79 +1,39 @@
 <!-- ------------------ -->
 <template>
     <BackButtonAppBar />
-    <main class="location-page">
-        <header class="location-heading">
-            <h1>स्थान जानकारी - Location Information</h1>
-            <div class="heading-rule" aria-hidden="true"><span></span><i></i><span></span></div>
-        </header>
+    <v-container class="fill-height d-flex align-center justify-center" fluid>
+        <v-row>
+            <v-col cols="12">
+                <!-- Location Information -->
+                <v-card outlined class="pa-6">
+                    <!-- <h4 class="mb-4">Current plot_no</h4> -->
+                    <h4 class="mb-4">स्थान जानकारी - Location Information</h4>
 
-        <v-form class="location-form-card" @submit.prevent="submitForm">
-            <div class="location-field">
-                <span class="location-icon"><v-icon icon="mdi-office-building-marker" /></span>
-                <div class="location-control">
-                    <label>कार्यस्थल / कार्यालय का पता - Worksite / Office Address</label>
-                    <v-text-field v-model="form.location" placeholder="Enter worksite / office address"
-                        variant="outlined" hide-details="auto" />
-                </div>
-            </div>
+                    <!-- Address -->
+                    <v-text-field label="कार्यस्थल / कार्यालय का पता - Worksite / Office Address"
+                        v-model="form.location" class="mb-3"></v-text-field>
+                    <!-- plot_no -->
+                    <v-text-field label="Plot Number/Office Number" v-model="form.plot_no" class="mb-3"></v-text-field>
 
-            <div class="location-field">
-                <span class="location-icon"><v-icon icon="mdi-home" /></span>
-                <div class="location-control">
-                    <label>Plot Number/Office Number <b>*</b></label>
-                    <v-text-field v-model="form.plot_no" placeholder="Enter plot number / office number"
-                        variant="outlined" hide-details="auto" hint="Required field" persistent-hint />
-                </div>
-            </div>
+                    <!-- street_area_village -->
+                    <v-text-field label="Area/  Village / शहर - street_area_village" v-model="form.street_area_village"
+                        class="mb-3"></v-text-field>
+                    <!-- State -->
+                    <v-select label="राज्य - State" v-model="form.state" :items="states" item-title="state_name"
+                        item-value="lgd_code" @update:modelValue="getDistrict"></v-select>
 
-            <div class="location-field">
-                <span class="location-icon"><v-icon icon="mdi-map-marker" /></span>
-                <div class="location-control">
-                    <label>Area/ Village / शहर - street_area_village</label>
-                    <v-text-field v-model="form.street_area_village" placeholder="Enter area / village / city"
-                        variant="outlined" hide-details="auto" />
-                </div>
-            </div>
+                    <!-- District -->
+                    <v-select label="जिला - District" v-model="form.district" :items="districts" item-value="lgd_code"
+                        item-title="district_name" class="mb-3"></v-select>
 
-            <div class="location-field">
-                <span class="location-icon"><v-icon icon="mdi-map" /></span>
-                <div class="location-control">
-                    <label>राज्य - State <b>*</b></label>
-                    <v-select v-model="form.state" :items="states" item-title="state_name" item-value="lgd_code"
-                        placeholder="Select State" variant="outlined" hide-details="auto" hint="Required field"
-                        persistent-hint @update:modelValue="getDistrict" />
-                </div>
-            </div>
+                    <v-text-field label="Pincode" v-model="form.pincode" item-value="value"></v-text-field>
+                    <v-btn class="mb-3" color="primary" @click="useCurrentLocation">Use Current Location</v-btn>
 
-            <div class="location-field">
-                <span class="location-icon"><v-icon icon="mdi-bank" /></span>
-                <div class="location-control">
-                    <label>जिला - District <b>*</b></label>
-                    <v-select v-model="form.district" :items="districts" item-value="lgd_code"
-                        item-title="district_name" placeholder="Select District" variant="outlined"
-                        hide-details="auto" hint="Required field" persistent-hint />
-                </div>
-            </div>
-
-            <div class="location-field">
-                <span class="location-icon"><v-icon icon="mdi-barcode" /></span>
-                <div class="location-control">
-                    <label>Pincode <b>*</b></label>
-                    <v-text-field v-model="form.pincode" type="text" inputmode="numeric" maxlength="6"
-                        placeholder="Enter pincode" variant="outlined" hide-details="auto"
-                        hint="Required field" persistent-hint />
-                </div>
-            </div>
-
-            <v-btn class="location-action" type="button" block @click="useCurrentLocation">
-                <v-icon icon="mdi-crosshairs-gps" />Use Current Location
-            </v-btn>
-
-            <v-btn class="employer-primary-action location-save" type="submit" block>
-                <v-icon icon="mdi-content-save" />Save
-            </v-btn>
-        </v-form>
-    </main>
+                    <v-btn block color="primary" large @click="submitForm">Save </v-btn>
+                </v-card>
+            </v-col>
+        </v-row>
+    </v-container>
 </template>
 
 <script setup>
@@ -305,75 +265,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.location-page {
-    min-height: calc(100vh - 100px);
-    padding: 24px 10px 100px;
-    color: #082566;
-    background: #fff url('@/assets/authenticated-background.png') center/100% 100% no-repeat;
-}
-
-.location-heading { margin: 0 auto 27px; text-align: center; }
-.location-heading h1 { margin: 0; color: #102966; font-size: clamp(28px, 4vw, 45px); font-weight: 800; line-height: 1.2; }
-.heading-rule { display: flex; align-items: center; justify-content: center; width: min(360px, 82vw); margin: 17px auto 0; }
-.heading-rule span { flex: 1; height: 2px; background: #0b68d7; }
-.heading-rule i { width: 18px; height: 18px; border: 2px solid #0b68d7; background: #fff; transform: rotate(45deg); }
-
-.location-form-card {
-    width: min(870px, 100%);
-    margin: 0 auto;
-    padding: 28px 24px 24px;
-    border: 1px solid #82c2ff;
-    border-radius: 23px;
-    background: rgba(255, 255, 255, .95);
-    box-shadow: 0 8px 24px rgba(22, 118, 210, .11);
-}
-
-.location-field { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 18px; }
-.location-icon { display: grid; place-items: center; flex: 0 0 58px; width: 58px; height: 58px; margin-top: 25px; border-radius: 13px; color: #647590; background: #edf2f8; }
-.location-icon .v-icon { font-size: 31px; }
-.location-control { flex: 1; min-width: 0; text-align: left; }
-.location-control label { display: block; max-width: 100%; margin: 0 0 7px; overflow: hidden; color: #122d65; font-size: clamp(17px, 2.1vw, 24px); font-weight: 800; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
-.location-control label b { color: #e6222f; }
-.location-control :deep(.v-field) { min-height: 58px; border-radius: 11px; color: #6d9bd2; background: #edf6ff; }
-.location-control :deep(.v-field__outline) { --v-field-border-opacity: 1; }
-.location-control :deep(.v-field__input) { min-height: 56px; padding-inline: 18px; color: #52627b; font-size: 17px; }
-.location-control :deep(input::placeholder) { color: #94a8c5; opacity: 1; }
-.location-control :deep(.v-messages__message),
-.location-control :deep(.v-field__append-inner) { color: #7285a5; }
-
-.location-action {
-    width: 100%;
-    height: 52px !important;
-    margin: 2px 0 10px;
+.v-card {
     border-radius: 12px;
-    color: #fff;
-    background: linear-gradient(110deg, #1688ed, #0867d6) !important;
-    box-shadow: 0 5px 11px rgba(4, 92, 185, .24) !important;
-    font-size: 15px;
-    font-weight: 800;
-}
-
-.location-action .v-icon,
-.location-save .v-icon { margin-right: 10px; font-size: 25px; }
-.location-save { margin-top: 2px; text-transform: uppercase; }
-
-@media (max-width: 650px) {
-    .location-page { padding: 18px 8px 90px; background-size: auto 100%; }
-    .location-heading { margin-bottom: 21px; }
-    .location-heading h1 { padding-inline: 5px; font-size: clamp(22px, 6.8vw, 30px); }
-    .heading-rule { margin-top: 13px; }
-    .location-form-card { padding: 19px 10px 18px; border-radius: 18px; }
-    .location-field { gap: 10px; margin-bottom: 14px; }
-    .location-icon { flex-basis: 42px; width: 42px; height: 42px; margin-top: 23px; border-radius: 10px; }
-    .location-icon .v-icon { font-size: 24px; }
-    .location-control label { margin-bottom: 5px; font-size: 14px; }
-    .location-control :deep(.v-field) { min-height: 52px; }
-    .location-control :deep(.v-field__input) { min-height: 50px; padding-inline: 12px; font-size: 14px; }
-    .location-control :deep(.v-messages__message) { font-size: 11px; }
-}
-
-@media (max-width: 370px) {
-    .location-heading h1 { font-size: 21px; }
-    .location-control label { font-size: 13px; }
 }
 </style>

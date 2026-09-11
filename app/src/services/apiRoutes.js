@@ -1,5 +1,5 @@
 const apiRoutes = {
-    mapSecretKey: '95ef3999d1bf25e4ce836434',
+    mapSecretKey: import.meta.env.VITE_MAPMYINDIA_KEY || 'ifssyfpdkzswvmcvvvnawclsnqhescuqrtom',
     // worker
     workerLogin: 'worker/login',
     workerSendOTP: '/worker/send-otp',

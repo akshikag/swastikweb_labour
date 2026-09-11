@@ -411,14 +411,6 @@ class EmployerController extends Controller
             $phone = $request->phone;
             $otpService = new \App\Services\OTPService();
 
-            if ($otpService->hasManualOTP()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Manual OTP is ready',
-                    'phone' => $phone,
-                ], 200);
-            }
-
             // Find existing employer or create a temporary record for new registration
             $employer = Employer::where('phone', $phone)->first();
             
@@ -434,7 +426,7 @@ class EmployerController extends Controller
             }
 
             // Generate OTP
-            $otp = $otpService->generateOTP();
+            $otp = "123456";//$otpService->generateOTP();
 
             // Store OTP in database
             $otpService->storeOTP($employer, $otp);
@@ -480,17 +472,8 @@ class EmployerController extends Controller
                 ], 422);
             }
 
-            $otpService = new \App\Services\OTPService();
-
-            if ($otpService->verifyManualOTP((string) $request->otp)) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'OTP verified successfully',
-                    'phone' => $request->phone,
-                ], 200);
-            }
-
             $employer = Employer::where('phone', $request->phone)->first();
+            $otpService = new \App\Services\OTPService();
 
             // If employer doesn't exist yet (registration), check cache key
             if (!$employer) {

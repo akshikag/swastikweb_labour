@@ -1,17 +1,38 @@
 <template>
-    <v-app class="employer-dashboard-shell">
+    <v-app>
         <!-- Page Content -->
         <v-main>
             <router-view />
-            <DashboardBottomNavigation role="employer" />
+            <!-- Bottom Navigation -->
+            <v-bottom-navigation v-model="activeTab" color="primary" grow app>
+                <v-btn to="/employer-dashboard-home">
+                    <v-icon>mdi-home</v-icon>
+                    <span>Home</span>
+                </v-btn>
+
+                <v-btn to="/employer-dashboard-search">
+                    <v-icon>mdi-magnify</v-icon>
+                    <span>Search</span>
+                </v-btn>
+
+                <v-btn to="/employer-dashboard-profile">
+                    <v-icon>mdi-account-circle</v-icon>
+                    <span>Profile</span>
+                </v-btn>
+            </v-bottom-navigation>
         </v-main>
     </v-app>
 </template>
-<script setup>
-import DashboardBottomNavigation from '@/components/navigation/DashboardBottomNavigation.vue'
+<script>
+export default {
+    data() {
+        return {
+            activeTab: 0,
+        };
+    },
+    methods: {
+
+    },
+};
 </script>
-<style scoped>
-.employer-dashboard-shell :deep(.v-main) {
-    padding-bottom: calc(78px + env(safe-area-inset-bottom)) !important;
-}
-</style>
+<style></style>

@@ -1,40 +1,44 @@
 <template>
     <LogoutAppBar />
 
-    <v-container class="employer-search-page" fluid>
+    <v-container class="pa-4">
         <!-- Title -->
-        <h2 class="search-page-title">Find Work/Jobs</h2>
+        <h2 class="text-center mb-4">Find Nearby Workers</h2>
 
         <!-- Filters -->
-        <v-row class="search-filters" dense>
+        <v-row dense>
             <v-col cols="6">
-                <div class="search-filter-field"><span class="filter-icon"><v-icon>mdi-map-marker</v-icon></span><div class="filter-control"><label>Location</label><v-text-field v-model="filters.location" placeholder="Enter location" variant="outlined" density="compact" hide-details /></div></div>
+                <v-text-field v-model="filters.location" label="Location" prepend-inner-icon="mdi-map-marker"
+                    variant="outlined" density="compact" hide-details />
             </v-col>
 
             <v-col cols="6">
-                <div class="search-filter-field"><span class="filter-icon"><v-icon>mdi-map-marker</v-icon></span><div class="filter-control"><label>Pincode</label><v-text-field v-model="filters.pincode" placeholder="Enter pincode" variant="outlined" density="compact" hide-details /></div></div>
+                <v-text-field v-model="filters.pincode" label="Pincode" prepend-inner-icon="mdi-map-marker"
+                    variant="outlined" density="compact" hide-details />
             </v-col>
 
             <v-col cols="6">
-                <div class="search-filter-field"><span class="filter-icon"><v-icon>mdi-briefcase</v-icon></span><div class="filter-control"><label>Select Skill</label><v-select v-model="filters.skill" :items="skills" item-title="name" item-value="id" placeholder="Choose Skill" variant="outlined" density="compact" hide-details clearable /></div></div>
+                <v-select v-model="filters.skill" :items="skills" label="Select Skill" item-title="name" item-value="id"
+                    prepend-inner-icon="mdi-briefcase" variant="outlined" density="compact" hide-details clearable />
             </v-col>
             <v-col cols="6">
-                <div class="search-filter-field"><span class="filter-icon"><v-icon>mdi-ruler</v-icon></span><div class="filter-control"><label>Range (km)</label><v-select v-model="filters.range" :items="ranges" item-title="name" item-value="id" placeholder="Select range" variant="outlined" density="compact" hide-details clearable /></div></div>
+                <v-select v-model="filters.range" :items="ranges" item-title="name" item-value="id" label="Range (km)"
+                    prepend-inner-icon="mdi-ruler" variant="outlined" density="compact" clearable />
             </v-col>
         </v-row>
 
         <!-- Range Filter -->
-        <v-row class="search-actions align-center mb-3 mt-2">
+        <v-row class="align-center mb-3 mt-2">
             <v-col cols="8" class="text-right">
                 <v-btn color="primary" prepend-icon="mdi-magnify" class="w-100" @click="filterWorkers">
-                    SEARCH
+                    Search
                 </v-btn>
             </v-col>
             <v-col cols="4" class="text-right">
                 <!-- Toggle View -->
                 <v-btn variant="tonal" color="primary" @click="toggleMap">
                     <v-icon left>{{ showMap ? 'mdi-format-list-bulleted' : 'mdi-map' }}</v-icon>
-                    {{ showMap ? 'LIST VIEW' : 'MAP VIEW' }}
+                    {{ showMap ? 'List View' : 'Map View' }}
                 </v-btn>
             </v-col>
         </v-row>
@@ -48,7 +52,7 @@
         <!-- List View -->
         <v-row dense v-show="!showMap">
             <v-col v-for="worker in workers" :key="worker.id" cols="12" sm="6" md="4">
-                <v-card class="worker-result-card" elevation="0">
+                <v-card class="pa-3 rounded-lg" elevation="2">
                     <v-row align="center" no-gutters>
                         <!-- Avatar -->
                         <v-col cols="auto">
@@ -234,7 +238,12 @@ export default {
         // },
 
         loadMapplsScript() {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
+                if (!apiRoutes.mapSecretKey) {
+                    reject(new Error("MapmyIndia API key is missing."));
+                    return;
+                }
+
                 if (window.mappls) return resolve();
 
                 const script = document.createElement("script");
@@ -242,6 +251,7 @@ export default {
                     "https://apis.mappls.com/advancedmaps/api/" + apiRoutes.mapSecretKey + "/map_sdk?v=3.0&layer=vector";
                 script.async = true;
                 script.onload = resolve;
+                script.onerror = () => reject(new Error("Unable to load MapmyIndia SDK."));
                 document.body.appendChild(script);
             });
         },
@@ -265,6 +275,22 @@ export default {
             return "data:image/svg+xml;base64," + btoa(this.createMarkerSVG(color));
         },
 
+        syncSearchLocation(lat, lng) {
+            const selectedLat = Number(lat);
+            const selectedLng = Number(lng);
+
+            if (!Number.isFinite(selectedLat) || !Number.isFinite(selectedLng)) return;
+
+            this.latitude = selectedLat;
+            this.longitude = selectedLng;
+            this.selectedLocation = { lat: selectedLat, lng: selectedLng };
+
+            const coordsText = `${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)}`;
+            this.filters.location = this.filters.location && this.filters.location !== coordsText
+                ? this.filters.location
+                : `Selected location (${coordsText})`;
+        },
+
         async useCurrentLocation() {
             try {
                 const coords = await Geolocation.getCurrentPosition();
@@ -274,10 +300,22 @@ export default {
                 const lat = this.latitude;
                 const lng = this.longitude;
 
-                this.markerObj.setPosition({ lat, lng });
-                //console.log("GPS allowed");
+                this.syncSearchLocation(lat, lng);
+
+                if (this.markerObj && typeof this.markerObj.setPosition === "function") {
+                    this.markerObj.setPosition({ lat, lng });
+                }
+                if (this.markerObj && typeof this.markerObj.setLatLng === "function") {
+                    this.markerObj.setLatLng([lat, lng]);
+                }
+                if (this.mapObj && typeof this.mapObj.setCenter === "function") {
+                    this.mapObj.setCenter({ lat, lng });
+                }
+                if (this.mapObj && typeof this.mapObj.setView === "function") {
+                    this.mapObj.setView([lat, lng], this.mapObj.getZoom?.() ?? 14);
+                }
             } catch (e) {
-                //console.log("GPS not allowed");
+                console.warn("GPS not allowed", e);
             }
 
         },
@@ -308,122 +346,160 @@ export default {
             return "data:image/svg+xml;base64," + btoa(this.createUserMarkerSVG());
         },
 
-        async initMap() {
-            await this.loadMapplsScript();
+        initFallbackMap() {
+            const lat = Number(this.latitude) || 28.6139;
+            const lng = Number(this.longitude) || 77.209;
 
-            this.mapObj = null;
-            this.markerObj = null;
+            this.mapObj = L.map("mapContainer", { zoomControl: true });
+            this.mapObj.setView([lat, lng], 13);
 
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "&copy; OpenStreetMap contributors",
+            }).addTo(this.mapObj);
 
-
-            const lat = this.latitude || 28.6139;
-            const lng = this.longitude || 77.209;
-
+            this.markerObj = L.marker([lat, lng], { draggable: true }).addTo(this.mapObj);
             this.selectedLocation = { lat, lng };
 
-            this.mapObj = new mappls.Map("mapContainer", {
-                center: { lat, lng },
-                zoom: 14,
+            this.markerObj.on("dragend", (event) => {
+                const coords = event.target.getLatLng();
+                this.selectedLocation = { lat: coords.lat, lng: coords.lng };
+                this.syncSearchLocation(coords.lat, coords.lng);
+                this.latitude = coords.lat;
+                this.longitude = coords.lng;
             });
 
-            // Add user marker (blue dot)
-            this.markerObj = new mappls.Marker({
-                map: this.mapObj,
-                position: { lat, lng },
-                draggable: true,
-                icon: this.createUserMarkerIcon(),
-            });
-
-            this.markerObj.on("dragend", (evt) => {
-                ////console.log(evt)
-                const lat = evt.target._lngLat.lat || evt.latitude;
-                const lng = evt.target._lngLat.lng || evt.longitude;
-
+            this.mapObj.on("click", (event) => {
+                const { lat, lng } = event.latlng;
                 this.selectedLocation = { lat, lng };
-
-                this.latitude = this.selectedLocation.lat;
-                this.longitude = this.selectedLocation.lng;
-                //console.log("Dragged:", this.selectedLocation);
+                this.syncSearchLocation(lat, lng);
+                this.latitude = lat;
+                this.longitude = lng;
+                this.markerObj.setLatLng([lat, lng]);
             });
 
-            this.mapObj.on("click", (e) => {
-
-                //console.log('dd', e.lngLat)
-                const lat = e.lngLat.lat;
-                const lng = e.lngLat.lng;
-
-                this.selectedLocation = { lat, lng };
-
-                // If marker exists -> move it
-                if (this.markerObj) {
-                    this.markerObj.setPosition({ lat, lng });
-                } else {
-                    // Create new marker
-                    this.markerObj = new mappls.Marker({
-                        map: this.mapObj,
-                        position: { lat, lng },
-                        draggable: true,
-                        icon: this.createUserMarkerIcon(),
-
-                    });
-
-                    // Add dragend event only once
-                    this.markerObj.on("dragend", (evt) => {
-                        ////console.log(evt)
-                        const lat = evt.target._lngLat.lat || evt.latitude;
-                        const lng = evt.target._lngLat.lng || evt.longitude;
-
-                        this.selectedLocation = { lat, lng };
-                        //console.log("Dragged:", this.selectedLocation);
-                    });
-                }
-
-                this.latitude = this.selectedLocation.lat;
-                this.longitude = this.selectedLocation.lng;
-
-                //console.log("Clicked:", this.selectedLocation);
-            });
-
-
-            // Add worker markers
             this.addWorkerMarkers();
+        },
+
+        async initMap() {
+            try {
+                await this.loadMapplsScript();
+
+                this.mapObj = null;
+                this.markerObj = null;
+
+                const lat = this.latitude || 28.6139;
+                const lng = this.longitude || 77.209;
+
+                this.selectedLocation = { lat, lng };
+
+                this.mapObj = new window.mappls.Map("mapContainer", {
+                    center: { lat, lng },
+                    zoom: 14,
+                });
+
+                this.markerObj = new window.mappls.Marker({
+                    map: this.mapObj,
+                    position: { lat, lng },
+                    draggable: true,
+                    icon: this.createUserMarkerIcon(),
+                });
+
+                this.markerObj.on("dragend", (evt) => {
+                    const lat = evt.target._lngLat.lat || evt.latitude;
+                    const lng = evt.target._lngLat.lng || evt.longitude;
+
+                    this.syncSearchLocation(lat, lng);
+                    this.selectedLocation = { lat, lng };
+                    this.latitude = this.selectedLocation.lat;
+                    this.longitude = this.selectedLocation.lng;
+                });
+
+                this.mapObj.on("click", (e) => {
+                    const lat = e.lngLat.lat;
+                    const lng = e.lngLat.lng;
+
+                    this.selectedLocation = { lat, lng };
+
+                    if (this.markerObj && typeof this.markerObj.setPosition === "function") {
+                        this.markerObj.setPosition({ lat, lng });
+                    } else {
+                        this.markerObj = new window.mappls.Marker({
+                            map: this.mapObj,
+                            position: { lat, lng },
+                            draggable: true,
+                            icon: this.createUserMarkerIcon(),
+                        });
+                    }
+
+                    this.syncSearchLocation(lat, lng);
+                    this.latitude = this.selectedLocation.lat;
+                    this.longitude = this.selectedLocation.lng;
+                });
+
+                this.addWorkerMarkers();
+            } catch (error) {
+                console.error("MapmyIndia map load failed:", error);
+                this.initFallbackMap();
+            }
         },
         addWorkerMarkers() {
             if (!this.workers || this.workers.length === 0) return;
 
-
             this.clearWorkerMarkers();
-
             this.markers = [];
 
             this.workers.forEach(worker => {
-                const marker = new mappls.Marker({
+                if (this.mapObj && this.mapObj instanceof L.Map) {
+                    const marker = L.marker([Number(worker.lat), Number(worker.long)]).addTo(this.mapObj);
+                    marker.bindPopup(`
+                        <div style="padding: 8px; font-size: 14px;">
+                            <strong>${worker.name}</strong><br>
+                            📞 ${worker.phone}<br><br>
+                            <button id="viewDetailsBtn_${worker.id}"
+                                style="padding:6px 10px; background:#1976D2; color:#fff; border:none; border-radius:4px;">
+                                View Details
+                            </button>
+                        </div>
+                    `);
+
+                    marker.on("click", () => {
+                        setTimeout(() => {
+                            const btn = document.getElementById(`viewDetailsBtn_${worker.id}`);
+                            if (btn) {
+                                btn.onclick = () => {
+                                    this.$router.push({ name: "employer-dashboard-home-applied-worker-detail", params: { id: worker.id } });
+                                };
+                            }
+                        }, 50);
+                    });
+
+                    this.markers.push(marker);
+                    return;
+                }
+
+                const marker = new window.mappls.Marker({
                     map: this.mapObj,
-                    position: { lat: worker.lat, lng: worker.long },
+                    position: { lat: Number(worker.lat), lng: Number(worker.long) },
                     icon: this.createMarkerIcon(this.getPrimaryColor()),
-                    // fitbounds: true,
                     popupHtml: `
-                                   <div style="padding: 8px; font-size: 14px;">
-                    <strong>${worker.name}</strong><br>
-                    📞 ${worker.phone}<br><br>
-                    <button id="viewDetailsBtn_${worker.id}"
-                        style="padding:6px 10px; background:#1976D2; color:#fff; border:none; border-radius:4px;">
-                        View Details
-                    </button>
-                </div>
-                                `
+                        <div style="padding: 8px; font-size: 14px;">
+                            <strong>${worker.name}</strong><br>
+                            📞 ${worker.phone}<br><br>
+                            <button id="viewDetailsBtn_${worker.id}"
+                                style="padding:6px 10px; background:#1976D2; color:#fff; border:none; border-radius:4px;">
+                                View Details
+                            </button>
+                        </div>
+                    `
                 });
 
                 this.markers.push(marker);
 
-                // Attach click event for popup button after marker is clicked
                 marker.addListener("click", () => {
-                    // Wait a tiny bit for popup to render
                     setTimeout(() => {
                         const btn = document.getElementById(`viewDetailsBtn_${worker.id}`);
                         if (btn) {
                             btn.onclick = () => {
-                                // Navigate to detail page with worker id
                                 this.$router.push({ name: "employer-dashboard-home-applied-worker-detail", params: { id: worker.id } });
                             };
                         }
@@ -447,9 +523,12 @@ export default {
 </script>
 
 <style scoped>
-.employer-search-page{min-height:calc(100vh - 64px);padding:16px 15px 92px!important;background:#fff url('@/assets/authenticated-background.png') center/100% 100% no-repeat;color:#142b58}.search-page-title{margin:4px 0 18px;color:#171d2b;font-size:25px;font-weight:800;text-align:center}.search-filters{width:100%;margin:0 auto}.search-filters :deep(.v-col){padding:3px!important}.search-filters :deep(.v-field){min-height:41px;border:1px solid #aeb9c8;border-radius:5px;background:#fff}.search-filters :deep(.v-field__input){min-height:39px;padding-inline:10px;font-size:16px}.search-filters :deep(.v-label){font-size:15px;color:#777}.search-filters :deep(.v-field__prepend-inner){color:#7c7c7c;padding-right:5px}.search-filters :deep(.v-field__append-inner){color:#777}.search-actions{margin:12px 0 16px!important}.search-actions :deep(.v-col){padding:3px!important}.search-actions .v-btn{height:37px!important;border-radius:4px;font-size:14px;font-weight:800;letter-spacing:.5px}.search-actions .v-btn:first-child{background:#167cd5!important;color:#fff}.search-actions .v-btn:last-child{background:#e5f1fc!important;color:#1269b7}.worker-result-card{min-height:126px;padding:10px 12px;border:1px solid #d8d8d8;border-radius:9px!important;background:#fffffff5!important;box-shadow:0 2px 5px #0000001c!important;transition:transform .18s,box-shadow .18s}.worker-result-card:hover{transform:translateY(-2px);box-shadow:0 6px 14px #00000022!important}.worker-result-card :deep(.v-avatar){flex:0 0 auto}.worker-result-card :deep(.v-col){padding:0}.worker-result-card :deep(.pl-3){padding-left:12px!important}.worker-result-card h4{color:#343434;font-size:16px!important;font-weight:500}.worker-result-card p{margin:2px 0!important;color:#444;font-size:12px;line-height:1.45}.worker-result-card .v-btn{width:40px;height:40px;background:#147bd6!important;box-shadow:0 3px 7px #0b579c3d}.worker-result-card .v-btn .v-icon{color:#fff;font-size:25px}.employer-search-page :deep(#mapContainer){border:1px solid #bdd2e7;box-shadow:0 3px 10px #163f6b1c}.employer-search-page .v-progress-circular{margin-top:25px}
-@media(min-width:651px){.employer-search-page{padding:28px 24px 110px!important}.search-page-title{font-size:34px}.search-filters,.search-actions{max-width:900px}.worker-result-card{max-width:900px;margin:0 auto}}
-@media(max-width:390px){.employer-search-page{padding-inline:10px!important}.search-page-title{font-size:23px;margin-bottom:14px}.search-filters :deep(.v-field__input){font-size:14px}.search-actions .v-btn{font-size:12px}.worker-result-card p{font-size:11px}}
-.search-page-title{margin:6px 0 22px;color:#0a2255;font-size:30px;font-weight:800;letter-spacing:-.8px}.search-page-title:after{content:'◇';display:block;margin:4px auto 0;color:#546d99;font-size:18px;font-weight:400;line-height:1}.search-filter-field{display:flex;align-items:center;gap:8px;min-height:62px;padding:7px 8px;border:1px solid #b9dcff;border-radius:10px;background:#fff;box-shadow:0 5px 12px #1676d218}.filter-icon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:9px;background:#e1f1ff;color:#086aca}.filter-icon .v-icon{font-size:22px}.filter-control{flex:1;min-width:0}.filter-control label{display:block;margin:0 0 1px;color:#1c345f;font-size:12px;font-weight:700;line-height:1.1;text-align:left}.filter-control :deep(.v-field){min-height:26px;border:0!important;border-radius:0;background:transparent;box-shadow:none}.filter-control :deep(.v-field__outline){display:none}.filter-control :deep(.v-field__input){min-height:25px;padding:0!important;color:#1d3d70;font-size:12px}.filter-control :deep(.v-field__input input::placeholder){color:#8294ae;opacity:1}.filter-control :deep(.v-field__append-inner){padding:0;color:#0870d5}.filter-control :deep(.v-field__clearable){display:none}.search-actions{margin-top:16px!important}.search-actions .v-btn:first-child{background:#087fe5!important}.search-actions .v-btn:last-child{background:#e4f2ff!important;color:#086ac4!important}.search-actions .v-btn .v-icon{font-size:22px}
-@media(max-width:390px){.search-page-title{font-size:29px;margin-bottom:20px}.search-filter-field{min-height:62px}.filter-icon{flex-basis:34px;width:34px}.filter-control label{font-size:12px}.filter-control :deep(.v-field__input){font-size:12px}.search-actions{margin-top:17px!important}.search-actions .v-btn{height:49px!important;font-size:13px}}
+.v-card {
+    transition: 0.2s ease;
+}
+
+.v-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
 </style>

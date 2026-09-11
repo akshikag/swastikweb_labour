@@ -165,7 +165,7 @@
                 </v-row>
 
                 <!-- Submit -->
-                <v-btn class="mt-4 employer-primary-action" color="primary" block @click="submitForm">
+                <v-btn class="mt-4" color="primary" block @click="submitForm">
                     <v-icon left>mdi-content-save</v-icon> Post Job
                 </v-btn>
 

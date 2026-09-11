@@ -1,20 +1,17 @@
 <template>
     <BackButtonAppBar />
 
-    <v-container fluid class="post-job-page">
-        <v-card elevation="0" class="post-job-card">
-            <div class="post-job-heading">
-                <span class="post-job-heading-icon"><v-icon icon="mdi-wall" /></span>
-                <div>
-                    <v-card-title>Post a New Job</v-card-title>
-                    <p>Create opportunities. Build a stronger Himachal.</p>
-                </div>
-            </div>
+    <v-container class="pa-4">
+        <v-card elevation="2" class="pa-4">
+            <v-card-title class="text-h6 font-weight-bold">
+                🧱 Post a New Job
+            </v-card-title>
+            <v-divider class="mb-4"></v-divider>
 
-            <v-form ref="jobForm" class="post-job-form" lazy-validation @submit.prevent="submitForm">
+            <v-form ref="jobForm" lazy-validation>
 
                 <!-- SECTION 1: JOB INFO -->
-                <h4 class="section-title"><v-icon icon="mdi-briefcase" />Job Information</h4>
+                <h4 class="text-subtitle-1 mb-2">Job Information</h4>
 
                 <v-row dense>
 
@@ -49,14 +46,16 @@
                     </v-col>
 
                     <!-- Duration -->
-                    <v-col cols="12">
+                    <v-col cols="12" sm="6">
                         <v-text-field v-model="form.duration" label="Work Duration (Days)" type="number"
                             prepend-inner-icon="mdi-clock-outline" outlined dense />
                     </v-col>
                 </v-row>
 
+                <v-divider class="my-4"></v-divider>
+
                 <!-- SECTION 2: ADDRESS -->
-                <h4 class="section-title"><v-icon icon="mdi-map-marker" />Job Address</h4>
+                <h4 class="text-subtitle-1 mb-2">Job Address</h4>
 
                 <v-row dense>
 
@@ -92,7 +91,7 @@
 
                     <!-- Map Selector -->
                     <v-col cols="12" sm="6">
-                        <v-btn class="map-button" block @click="openMap"><v-icon icon="mdi-map-outline" />Select Location on Map</v-btn>
+                        <v-btn color="primary" @click="openMap">Select Location on Map</v-btn>
                     </v-col>
 
                     <v-col cols="12" sm="6">
@@ -104,8 +103,10 @@
                     </v-col>
                 </v-row>
 
+                <v-divider class="my-4"></v-divider>
+
                 <!-- SECTION 3: DESCRIPTION -->
-                <h4 class="section-title"><v-icon icon="mdi-file-document" />Work Description</h4>
+                <h4 class="text-subtitle-1 mb-2">Work Description</h4>
 
                 <v-row dense>
 
@@ -121,14 +122,14 @@
                             outlined dense hint="Separate with commas" />
                     </v-col>
 
-                    <v-col cols="12" sm="6">
+                    <v-col cols="12" sm="3">
                         <v-text-field v-model="form.requiredPeople" label="Required People *" type="number"
                             prepend-inner-icon="mdi-account-group" :error="v$.form.requiredPeople.$error"
                             :error-messages="v$.form.requiredPeople.$errors.map(() => 'Required people is mandatory')"
                             outlined dense />
                     </v-col>
 
-                    <v-col cols="12" sm="6">
+                    <v-col cols="12" sm="3">
                         <v-text-field v-model="form.workTime" label="Work Time (e.g. 9 AM - 6 PM)"
                             prepend-inner-icon="mdi-clock-time-four" outlined dense />
                     </v-col>
@@ -136,7 +137,7 @@
                     <!-- Work Type -->
                     <v-col cols="12" sm="6">
                         <v-select v-model="form.workType" label="Preferred Work Type *"
-                            prepend-inner-icon="mdi-briefcase" :items="['Daily Wage', 'Contract']" :error="v$.form.workType.$error"
+                            :items="['Daily Wage', 'Contract']" :error="v$.form.workType.$error"
                             :error-messages="v$.form.workType.$errors.map(() => 'Work type required')" outlined dense />
                     </v-col>
                     <!-- Duration -->
@@ -146,19 +147,21 @@
                     </v-col>
                 </v-row>
 
+                <v-divider class="my-4"></v-divider>
+
                 <!-- Facilities -->
-                <h4 class="section-title"><v-icon icon="mdi-cog" />Facilities Provided</h4>
+                <h4 class="text-subtitle-1 mb-2">Facilities Provided</h4>
 
                 <v-row dense>
-                    <v-col cols="12">
+                    <v-col cols="12" sm="6">
                         <v-select v-model="form.facilitie" label="Facilities" :items="facilities" item-title="name"
-                            item-value="id" prepend-inner-icon="mdi-format-list-bulleted" multiple chips />
+                            item-value="id" multiple chips />
                     </v-col>
                 </v-row>
 
                 <!-- Submit -->
-                <v-btn class="post-job-submit employer-primary-action" type="submit" block>
-                    <v-icon>mdi-send</v-icon> Post Job
+                <v-btn class="mt-4" color="primary" block @click="submitForm">
+                    <v-icon left>mdi-content-save</v-icon> Post Job
                 </v-btn>
 
             </v-form>
@@ -557,152 +560,11 @@ export default {
 </script>
 
 <style scoped>
-.post-job-page {
-    position: relative;
-    min-height: calc(100vh - 100px);
-    padding: 22px 18px 96px !important;
-    overflow: hidden;
-    color: #0b316d;
-    background: #f8fcff url('@/assets/authenticated-background.png') center/100% 100% no-repeat fixed;
+.v-card {
+    transition: 0.2s ease;
 }
 
-.post-job-page::before,
-.post-job-page::after {
-    content: '';
-    position: absolute;
-    z-index: 0;
-    pointer-events: none;
-}
-
-.post-job-page::before {
-    top: 9%;
-    left: -85px;
-    width: 250px;
-    height: 520px;
-    opacity: .11;
-    background: #1179d4;
-    clip-path: polygon(0 24%, 27% 24%, 34% 7%, 40% 24%, 83% 24%, 88% 31%, 43% 31%, 43% 100%, 32% 100%, 32% 31%, 0 31%);
-}
-
-.post-job-page::after {
-    right: -100px;
-    bottom: 8%;
-    width: 430px;
-    height: 300px;
-    opacity: .13;
-    background: linear-gradient(145deg, transparent 0 36%, #268bdc 37% 45%, transparent 46% 55%, #8bc4f3 56% 65%, transparent 66%);
-    clip-path: polygon(0 100%, 17% 52%, 32% 70%, 49% 17%, 66% 68%, 80% 37%, 100% 78%, 100% 100%);
-}
-
-.post-job-card {
-    position: relative;
-    z-index: 1;
-    width: min(760px, 100%);
-    margin: 0 auto;
-    padding: 20px 20px 18px;
-    border: 1px solid #d8e9f8;
-    border-radius: 20px !important;
-    background: rgba(255, 255, 255, .95) !important;
-    box-shadow: 0 10px 28px rgba(10, 73, 134, .17) !important;
-}
-
-.post-job-heading {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 0 12px 15px;
-}
-
-.post-job-heading-icon {
-    display: grid;
-    place-items: center;
-    flex: 0 0 50px;
-    width: 50px;
-    height: 50px;
-    border-radius: 9px;
-    color: #fff;
-    background: linear-gradient(135deg, #ff8b43, #eb4d25);
-    box-shadow: 0 5px 11px rgba(223, 74, 26, .22);
-}
-
-.post-job-heading-icon .v-icon { font-size: 34px; }
-.post-job-heading .v-card-title { padding: 0; color: #082e67; font-size: clamp(25px, 3.4vw, 35px); line-height: 1.1; font-weight: 800; }
-.post-job-heading p { margin: 4px 0 0; color: #6c7f9e; font-size: clamp(14px, 2vw, 19px); }
-
-.section-title {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    min-height: 56px;
-    margin: 14px 0 10px;
-    padding: 10px 20px;
-    border-radius: 13px;
-    color: #082f69;
-    background: linear-gradient(90deg, #eaf5ff, #f4f9fd);
-    font-size: clamp(19px, 2.5vw, 25px);
-    font-weight: 800;
-}
-
-.section-title .v-icon { color: #0875dc; font-size: 31px; }
-.post-job-form :deep(.v-row) { margin: -5px -8px; }
-.post-job-form :deep(.v-col) { padding: 5px 8px; }
-
-.post-job-form :deep(.v-field) {
-    min-height: 66px;
-    border-radius: 12px;
-    color: #afcae5;
-    background: linear-gradient(120deg, #fff, #f9fcff);
-    box-shadow: 0 2px 6px rgba(11, 83, 151, .08);
-}
-
-.post-job-form :deep(.v-field__outline) { --v-field-border-opacity: 1; }
-.post-job-form :deep(.v-field__prepend-inner) { align-items: center; padding-right: 13px; color: #0874d8; }
-.post-job-form :deep(.v-field__prepend-inner .v-icon) { font-size: 29px; opacity: 1; }
-.post-job-form :deep(.v-field__input) { min-height: 64px; color: #173b70; font-size: 16px; }
-.post-job-form :deep(.v-label) { color: #173b70; opacity: 1; }
-.post-job-form :deep(input::placeholder),
-.post-job-form :deep(textarea::placeholder) { color: #8a99b0; opacity: 1; }
-.post-job-form :deep(.v-field__append-inner) { color: #0b376c; }
-.post-job-form :deep(.v-messages__message) { color: #d22c37; font-size: 12px; }
-.post-job-form :deep(.v-chip) { background: #e3f2ff; color: #075cb7; }
-.post-job-form :deep(.v-textarea .v-field__prepend-inner) { align-items: flex-start; padding-top: 10px; }
-
-.map-button,
-.post-job-submit {
-    min-height: 66px;
-    border-radius: 12px;
-    color: #fff !important;
-    background: linear-gradient(115deg, #1689ed, #0768d7) !important;
-    box-shadow: 0 5px 11px rgba(4, 92, 185, .24) !important;
-    font-size: 15px;
-    font-weight: 800;
-    letter-spacing: .15px;
-}
-
-.map-button .v-icon,
-.post-job-submit .v-icon { margin-right: 12px; font-size: 28px; }
-.post-job-submit { height: 52px !important; margin-top: 18px; font-size: 17px; text-transform: uppercase; }
-.post-job-submit .v-icon { font-size: 25px; transform: rotate(-8deg); }
-
-.post-job-card :deep(.v-dialog .v-card) { border-radius: 18px; }
-
-@media (max-width: 650px) {
-    .post-job-page { padding: 14px 8px 82px !important; background-size: auto 100%; }
-    .post-job-card { padding: 15px 10px 13px; border-radius: 16px !important; }
-    .post-job-heading { gap: 11px; padding: 0 4px 10px; }
-    .post-job-heading-icon { flex-basis: 43px; width: 43px; height: 43px; }
-    .post-job-heading-icon .v-icon { font-size: 29px; }
-    .post-job-heading .v-card-title { font-size: 22px; }
-    .post-job-heading p { font-size: 12px; }
-    .section-title { min-height: 46px; margin: 10px 0 8px; padding: 8px 13px; gap: 10px; border-radius: 10px; font-size: 18px; }
-    .section-title .v-icon { font-size: 26px; }
-    .post-job-form :deep(.v-row) { margin: -4px; }
-    .post-job-form :deep(.v-col) { padding: 4px; }
-    .post-job-form :deep(.v-field) { min-height: 56px; border-radius: 10px; }
-    .post-job-form :deep(.v-field__input) { min-height: 54px; padding-inline: 11px; font-size: 14px; }
-    .post-job-form :deep(.v-field__prepend-inner) { padding-right: 8px; }
-    .post-job-form :deep(.v-field__prepend-inner .v-icon) { font-size: 24px; }
-    .map-button { min-height: 56px; font-size: 13px; }
-    .post-job-submit { height: 52px !important; font-size: 17px; }
+.v-card:hover {
+    transform: translateY(-3px);
 }
 </style>
