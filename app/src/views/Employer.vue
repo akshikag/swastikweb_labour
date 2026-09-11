@@ -59,6 +59,6 @@ export default {
 .board-introduction{width:100%;flex:0 0 auto}.board-highlights{flex-wrap:wrap;row-gap:7px}.board-highlights span{white-space:nowrap}
 .employer-choice-card{flex:0 0 auto}.choice-button{gap:12px}.choice-button>.v-icon:first-child{margin-right:0}.choice-button span{min-width:0;overflow-wrap:anywhere}.choice-arrow{flex:0 0 auto}
 .selection-footer-copy{position:relative;bottom:auto;left:auto;flex:0 0 auto;margin-top:auto;padding-top:24px;transform:none}
-.employer-selection-page{background-image:url('@/assets/worker-login-bg.png')!important;background-size:100% 100%!important;background-attachment:scroll}
+.employer-selection-page{background-image:url('@/assets/worker-login-bg.png')!important;background-size:100% auto!important;background-position:center top!important;background-repeat:no-repeat!important;background-attachment:scroll}
 .employer-selection-page{min-height:100dvh}
 </style>

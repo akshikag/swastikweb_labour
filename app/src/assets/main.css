@@ -1,6 +1,11 @@
 :root {
     --v-layout-top: 0px !important;
     --app-font-family: 'Poppins', sans-serif;
+    --app-form-label: #123881;
+    --app-form-input-bg: #edf6ff;
+    --app-form-input-border: #6d9bd2;
+    --app-form-input-text: #183e7a;
+    --app-form-placeholder: #8da3c2;
 }
 
 html,
@@ -35,6 +40,24 @@ h2 {
     width: 100%;
     padding-bottom: env(safe-area-inset-bottom);
     height: calc(56px + env(safe-area-inset-bottom)) !important;
+}
+
+/* Shared primary CTA sizing across employer forms, matching worker forms. */
+.employer-primary-action.v-btn {
+    width: 100%;
+    height: 52px !important;
+    min-height: 41px !important;
+    border-radius: 14px !important;
+    color: #fff !important;
+    background: linear-gradient(110deg, #1688ed, #0867d6) !important;
+    box-shadow: 0 5px 11px rgb(4 92 185 / 24%) !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    letter-spacing: .4px !important;
+}
+
+.employer-primary-action.v-btn .v-icon {
+    font-size: 25px !important;
 }
 
 .v-app-bar {
