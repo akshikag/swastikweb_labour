@@ -8,7 +8,7 @@ class OTPService
 {
     public function hasManualOTP(): bool
     {
-        return preg_match('/^\d{6}$/', (string) config('services.sms.manual_otp')) === 1;
+        return preg_match('/^\\d{6}$/', (string) config('services.sms.manual_otp')) === 1;
     }
 
     public function verifyManualOTP(string $otp): bool

@@ -234,7 +234,8 @@ export default {
         // },
 
         loadMapplsScript() {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
+                if (!apiRoutes.mapSecretKey) return reject(new Error("Mappls API key is missing."));
                 if (window.mappls) return resolve();
 
                 const script = document.createElement("script");
@@ -242,6 +243,7 @@ export default {
                     "https://apis.mappls.com/advancedmaps/api/" + apiRoutes.mapSecretKey + "/map_sdk?v=3.0&layer=vector";
                 script.async = true;
                 script.onload = resolve;
+                script.onerror = () => reject(new Error("Mappls SDK could not be loaded."));
                 document.body.appendChild(script);
             });
         },
@@ -274,7 +276,10 @@ export default {
                 const lat = this.latitude;
                 const lng = this.longitude;
 
-                this.markerObj.setPosition({ lat, lng });
+                if (this.markerObj?.setPosition) this.markerObj.setPosition({ lat, lng });
+                else if (this.markerObj?.setLatLng) this.markerObj.setLatLng([lat, lng]);
+                if (this.mapObj?.setCenter) this.mapObj.setCenter({ lat, lng });
+                else if (this.mapObj?.setView) this.mapObj.setView([lat, lng], this.mapObj.getZoom());
                 //console.log("GPS allowed");
             } catch (e) {
                 //console.log("GPS not allowed");
@@ -308,8 +313,33 @@ export default {
             return "data:image/svg+xml;base64," + btoa(this.createUserMarkerSVG());
         },
 
+        initFallbackMap() {
+            const lat = Number(this.latitude) || 28.6139;
+            const lng = Number(this.longitude) || 77.209;
+            this.selectedLocation = { lat, lng };
+            if (this.mapObj?.remove) this.mapObj.remove();
+            this.mapObj = L.map("mapContainer").setView([lat, lng], 14);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "&copy; OpenStreetMap contributors",
+            }).addTo(this.mapObj);
+            this.markerObj = L.marker([lat, lng], { draggable: true }).addTo(this.mapObj);
+            const updateLocation = ({ lat, lng }) => {
+                this.selectedLocation = { lat, lng };
+                this.latitude = lat;
+                this.longitude = lng;
+            };
+            this.markerObj.on("dragend", (event) => updateLocation(event.target.getLatLng()));
+            this.mapObj.on("click", (event) => {
+                const { lat, lng } = event.latlng;
+                this.markerObj.setLatLng([lat, lng]);
+                updateLocation({ lat, lng });
+            });
+            this.addWorkerMarkers();
+        },
+
         async initMap() {
-            await this.loadMapplsScript();
+            try {
+                await this.loadMapplsScript();
 
             this.mapObj = null;
             this.markerObj = null;
@@ -387,6 +417,10 @@ export default {
 
             // Add worker markers
             this.addWorkerMarkers();
+            } catch (error) {
+                console.warn("Mappls unavailable; using OpenStreetMap fallback.", error);
+                this.initFallbackMap();
+            }
         },
         addWorkerMarkers() {
             if (!this.workers || this.workers.length === 0) return;
@@ -397,6 +431,12 @@ export default {
             this.markers = [];
 
             this.workers.forEach(worker => {
+                if (this.mapObj instanceof L.Map) {
+                    const marker = L.marker([Number(worker.lat), Number(worker.long)]).addTo(this.mapObj);
+                    marker.bindPopup(`<strong>${worker.name || "Worker"}</strong><br>${worker.phone || ""}`);
+                    this.markers.push(marker);
+                    return;
+                }
                 const marker = new mappls.Marker({
                     map: this.mapObj,
                     position: { lat: worker.lat, lng: worker.long },

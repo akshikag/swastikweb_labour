@@ -64,6 +64,8 @@ import BackButtonAppBar from "@/components/header/BackButtonAppBar.vue";
 import { useRouter } from 'vue-router'
 
 import { Geolocation } from "@capacitor/geolocation";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 import api from "@/services/api.js";
 import apiRoutes from "@/services/apiRoutes.js";
@@ -108,7 +110,8 @@ function openMap() {
 }
 
 function loadMapplsScript() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+        if (!apiRoutes.mapSecretKey) return reject(new Error("Mappls API key is missing."));
         if (window.mappls) return resolve();
 
         const script = document.createElement("script");
@@ -116,6 +119,7 @@ function loadMapplsScript() {
             "https://apis.mappls.com/advancedmaps/api/" + apiRoutes.mapSecretKey + "/map_sdk?v=3.0&layer=vector";
         script.async = true;
         script.onload = resolve;
+        script.onerror = () => reject(new Error("Mappls SDK could not be loaded."));
         document.body.appendChild(script);
     });
 }
@@ -138,7 +142,27 @@ function createMarkerSVG(color) {
 function createMarkerIcon(color) {
     return "data:image/svg+xml;base64," + btoa(createMarkerSVG(color));
 }
+async function applySelectedLocation(lat, lng) {
+    if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return;
+    selectedLocation.value = { lat: Number(lat), lng: Number(lng) };
+    form.value.latitude = String(lat);
+    form.value.longitude = String(lng);
+    if (markerObj.value?.setPosition) markerObj.value.setPosition({ lat, lng });
+    else if (markerObj.value?.setLatLng) markerObj.value.setLatLng([lat, lng]);
+    await populateAddressFromCoordinates(lat, lng);
+}
+function initFallbackMap() {
+    if (mapObj.value?.remove) mapObj.value.remove();
+    const lat = Number(form.value.latitude) || 28.6139;
+    const lng = Number(form.value.longitude) || 77.209;
+    mapObj.value = L.map("mapContainer").setView([lat, lng], 14);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors" }).addTo(mapObj.value);
+    markerObj.value = L.marker([lat, lng], { draggable: true }).addTo(mapObj.value);
+    markerObj.value.on("dragend", (event) => applySelectedLocation(event.target.getLatLng().lat, event.target.getLatLng().lng));
+    mapObj.value.on("click", (event) => applySelectedLocation(event.latlng.lat, event.latlng.lng));
+}
 async function initMap() {
+    try {
     await loadMapplsScript();
 
     // Always reset when opening dialog
@@ -213,6 +237,10 @@ async function initMap() {
     });
 
     // setTimeout(() => this.mapObj.invalidateSize(), 300);
+    } catch (error) {
+        console.warn("Mappls unavailable; using OpenStreetMap fallback.", error);
+        initFallbackMap();
+    }
 }
 
 async function populateAddressFromCoordinates(lat, lng) {
@@ -317,8 +345,10 @@ async function useCurrentLocation() {
         form.value.latitude = lat;
         form.value.longitude = lng;
         selectedLocation.value = { lat, lng };
-        markerObj.value?.setPosition({ lat, lng });
-        mapObj.value?.setCenter?.({ lat, lng });
+        if (markerObj.value?.setPosition) markerObj.value.setPosition({ lat, lng });
+        else if (markerObj.value?.setLatLng) markerObj.value.setLatLng([lat, lng]);
+        if (mapObj.value?.setCenter) mapObj.value.setCenter({ lat, lng });
+        else if (mapObj.value?.setView) mapObj.value.setView([lat, lng], mapObj.value.getZoom());
 
         await populateAddressFromCoordinates(lat, lng);
         snackbar.value.message = "Location populated from device GPS";

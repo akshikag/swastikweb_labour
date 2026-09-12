@@ -352,6 +352,34 @@ class WorkerController extends Controller
         }
     }
 
+    /**
+     * Check if a phone number is already registered for a worker.
+     * Returns JSON { exists: bool, message: string }
+     */
+    public function checkPhone(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => 'required|digits:10',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $phone = $request->phone;
+        $exists = Worker::where('phone', $phone)->exists();
+
+        return response()->json([
+            'success' => true,
+            'exists' => $exists,
+            'message' => $exists ? 'Phone number already registered' : 'Phone number available',
+        ], 200);
+    }
+
     public function sendOTP(Request $request)
     {
         try {
