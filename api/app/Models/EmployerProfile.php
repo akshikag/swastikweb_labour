@@ -32,7 +32,6 @@ class EmployerProfile extends Model
         'pin_code',
         'profile_image',
         'gender',
-        'dob',
          'docType',
         'docNumber',
         'pdf',

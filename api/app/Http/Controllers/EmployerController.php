@@ -21,7 +21,6 @@ class EmployerController extends Controller
             'email' => 'nullable|email|unique:employers,email',
             'phone' => 'required|digits:10|unique:employers,phone',
             'password' => 'required|string|min:6|max:10',
-            'dob' => 'required|date',
            // 'skills' => 'required|array',
            // 'skills.*' => 'exists:skills,id',
         ]);
@@ -33,18 +32,6 @@ class EmployerController extends Controller
             ], 422);
         }
 
-        // Server-side age check: disallow users older than 60
-        if ($request->filled('dob')) {
-            $dob = \Carbon\Carbon::parse($request->dob);
-            $ageYears = $dob->diffInYears(now());
-            if ($ageYears > 60) {
-                return response()->json([
-                    'status' => false,
-                    'errors' => ['dob' => ['Sorry, users above 60 years of age are not eligible for registration.']]
-                ], 422);
-            }
-        }
-
         $user = Employer::create([
             'email' => $request->email,
             'phone' => $request->phone,
@@ -54,7 +41,6 @@ class EmployerController extends Controller
         $profile = EmployerProfile::create([
             'name'=> $request->name,
             'employer_id' => $user->id,
-                'dob' => $request->dob ?? null,
             'avg_worker' => $request->avg_worker,
             'work_type' => $request->work_type,
             'location' => $request->location,
@@ -425,6 +411,14 @@ class EmployerController extends Controller
             $phone = $request->phone;
             $otpService = new \App\Services\OTPService();
 
+            if ($otpService->hasManualOTP()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Manual OTP is ready',
+                    'phone' => $phone,
+                ], 200);
+            }
+
             // Find existing employer or create a temporary record for new registration
             $employer = Employer::where('phone', $phone)->first();
             
@@ -440,7 +434,7 @@ class EmployerController extends Controller
             }
 
             // Generate OTP
-            $otp = "123456";//$otpService->generateOTP();
+            $otp = $otpService->generateOTP();
 
             // Store OTP in database
             $otpService->storeOTP($employer, $otp);
@@ -486,8 +480,17 @@ class EmployerController extends Controller
                 ], 422);
             }
 
-            $employer = Employer::where('phone', $request->phone)->first();
             $otpService = new \App\Services\OTPService();
+
+            if ($otpService->verifyManualOTP((string) $request->otp)) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'OTP verified successfully',
+                    'phone' => $request->phone,
+                ], 200);
+            }
+
+            $employer = Employer::where('phone', $request->phone)->first();
 
             // If employer doesn't exist yet (registration), check cache key
             if (!$employer) {

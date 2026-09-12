@@ -6,11 +6,26 @@ use Carbon\Carbon;
 
 class OTPService
 {
+    public function hasManualOTP(): bool
+    {
+        return preg_match('/^\\d{6}$/', (string) config('services.sms.manual_otp')) === 1;
+    }
+
+    public function verifyManualOTP(string $otp): bool
+    {
+        return $this->hasManualOTP()
+            && hash_equals((string) config('services.sms.manual_otp'), $otp);
+    }
+
     /**
      * Generate a random 6-digit OTP
      */
     public function generateOTP(): string
     {
+        if ($this->hasManualOTP()) {
+            return (string) config('services.sms.manual_otp');
+        }
+
         return str_pad((string) rand(0, 999999), 6, '0', STR_PAD_LEFT);
     }
 
@@ -20,6 +35,10 @@ class OTPService
      */
     public function sendOTP(string $phone, string $otp): bool
     {
+        if ($this->hasManualOTP()) {
+            return $this->sendViaMock($phone, $otp);
+        }
+
         $provider = config('services.sms.provider', 'mock');
 
         return match($provider) {

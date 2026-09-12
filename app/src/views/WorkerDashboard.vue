@@ -1,40 +1,32 @@
 <template>
-    <v-app>
+    <v-app class="worker-dashboard-shell">
         <!-- App Bar -->
         <v-main>
             <router-view />
-            <!-- Bottom Navigation -->
-            <v-bottom-navigation v-model="activeTab" color="primary" grow app>
-                <v-btn to="/worker-dashboard-home">
-                    <v-icon>mdi-home</v-icon>
-                    <span>Home</span>
-                </v-btn>
-
-                <v-btn to="/worker-dashboard-search">
-                    <v-icon>mdi-magnify</v-icon>
-                    <span>Search</span>
-                </v-btn>
-
-                <v-btn to="/worker-dashboard-profile">
-                    <v-icon>mdi-account-circle</v-icon>
-                    <span>Profile</span>
-                </v-btn>
-            </v-bottom-navigation>
+            <DashboardBottomNavigation role="worker" />
         </v-main>
     </v-app>
 </template>
-<script>
-
-export default {
-
-    data() {
-        return {
-            activeTab: 0,
-        };
-    },
-    methods: {
-
-    },
-};
+<script setup>
+import DashboardBottomNavigation from '@/components/navigation/DashboardBottomNavigation.vue'
 </script>
-<style></style>
+<style scoped>
+.worker-dashboard-shell :deep(.v-main) {
+    padding-bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+}
+
+/* Shared field appearance for every page inside the worker dashboard. */
+.worker-dashboard-shell :deep(.v-field) {
+    background: #eef6ff !important;
+    --v-field-border-opacity: 1 !important;
+}
+
+.worker-dashboard-shell :deep(.v-field--variant-outlined .v-field__outline) {
+    color: #082f77 !important;
+    opacity: 1 !important;
+}
+
+.worker-dashboard-shell :deep(.v-field--focused .v-field__outline) {
+    color: #075fd0 !important;
+}
+</style>

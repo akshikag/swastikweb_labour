@@ -1,4 +1,5 @@
 const apiRoutes = {
+    // Configure a domain-authorized Mappls key in VITE_MAPMYINDIA_KEY when available.
     mapSecretKey: import.meta.env.VITE_MAPMYINDIA_KEY || 'ifssyfpdkzswvmcvvvnawclsnqhescuqrtom',
     // worker
     workerLogin: 'worker/login',

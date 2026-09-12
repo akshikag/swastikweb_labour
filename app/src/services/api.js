@@ -40,9 +40,4 @@ api.interceptors.response.use(
 );
 
 
-// Helper: check if a worker phone already exists (used by registration form)
-export const checkWorkerPhone = (phone) => {
-    return api.post('worker/check-phone', { phone });
-};
-
 export default api;

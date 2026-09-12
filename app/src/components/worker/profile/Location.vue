@@ -1,46 +1,40 @@
 <template>
     <BackButtonAppBar />
-    <v-container class="fill-height d-flex align-center justify-center" fluid>
-        <v-row>
-            <v-col cols="12">
-                <!-- Location Information -->
-                <v-card outlined class="pa-6">
+    <main class="location-page">
+      <v-form class="location-form-card" @submit.prevent="submitForm">
                     <!-- <h4 class="mb-4">Current plot_no</h4> -->
 
                     <!-- plot_no -->
-                    <v-text-field label="House Number / Plot Number" v-model="form.plot_no" class="mb-3" required @blur="$refs.plotnoField?.$el.classList.add('required')" hint="Required field" persistent-hint></v-text-field>
+                    <div class="location-field"><span class="location-icon"><v-icon icon="mdi-home" /></span><div class="location-control"><label>House Number / Plot Number <b>*</b></label><v-text-field v-model="form.plot_no" placeholder="Enter house number / plot number" variant="outlined" hide-details="auto" hint="Required field" persistent-hint required /></div></div>
 
                     <!-- street_area_village -->
-                    <v-text-field label="Area/  Village / शहर - street_area_village" v-model="form.street_area_village"
-                        class="mb-3"></v-text-field>
+                    <div class="location-field"><span class="location-icon"><v-icon icon="mdi-map-marker" /></span><div class="location-control"><label>Area/ Village / क्षेत्र - street_area...</label><v-text-field v-model="form.street_area_village" placeholder="Enter area / village / street area..." variant="outlined" hide-details /></div></div>
                     <!-- State -->
-                    <v-select label="राज्य - State *" v-model="form.state" :items="states" item-title="state_name"
-                        item-value="lgd_code" @update:modelValue="getDistrict" required hint="Required field" persistent-hint></v-select>
+                    <div class="location-field"><span class="location-icon"><v-icon icon="mdi-map" /></span><div class="location-control"><label>राज्य - State <b>*</b></label><v-select v-model="form.state" :items="states" item-title="state_name" item-value="lgd_code" placeholder="Select State" variant="outlined" hide-details="auto" hint="Required field" persistent-hint @update:modelValue="getDistrict" required /></div></div>
 
                     <!-- District -->
-                    <v-select label="जिला - District *" v-model="form.district" :items="districts" item-value="lgd_code"
-                        item-title="district_name" class="mb-3" required hint="Required field" persistent-hint></v-select>
+                    <div class="location-field"><span class="location-icon"><v-icon icon="mdi-bank" /></span><div class="location-control"><label>जिला - District <b>*</b></label><v-select v-model="form.district" :items="districts" item-value="lgd_code" item-title="district_name" placeholder="Select District" variant="outlined" hide-details="auto" hint="Required field" persistent-hint required /></div></div>
 
-                    <v-text-field label="Pincode *" v-model="form.pincode" item-value="value" required hint="Required field" persistent-hint></v-text-field>
+                    <div class="location-field"><span class="location-icon"><v-icon icon="mdi-barcode" /></span><div class="location-control"><label>Pincode <b>*</b></label><v-text-field v-model="form.pincode" placeholder="Enter pincode" variant="outlined" hide-details="auto" hint="Required field" persistent-hint required /></div></div>
 
                         <!-- Use Current Location Button -->
-                        <v-btn class="mb-2" color="primary" @click="useCurrentLocation">Use Current Location</v-btn>
+                        <v-btn class="location-action" color="primary" @click="useCurrentLocation"><v-icon start icon="mdi-crosshairs-gps" />Use Current Location</v-btn>
 
                         <!-- Map Selector -->
 
-                        <v-btn class="mb-2" color="primary" @click="openMap">Select Location on Map</v-btn>
+                        <v-btn class="location-action" color="primary" @click="openMap"><v-icon start icon="mdi-map-outline" />Select Location on Map</v-btn>
 
-                    <v-text-field v-model="form.latitude" label="Latitude" readonly outlined dense />
+                    <div class="location-field compact"><span class="location-icon"><v-icon icon="mdi-crosshairs" /></span><div class="location-control"><label>Latitude</label><v-text-field v-model="form.latitude" placeholder="Latitude" readonly variant="outlined" hide-details /></div></div>
 
-                    <v-text-field v-model="form.longitude" label="Longitude" readonly outlined dense />
+                    <div class="location-field compact"><span class="location-icon"><v-icon icon="mdi-crosshairs" /></span><div class="location-control"><label>Longitude</label><v-text-field v-model="form.longitude" placeholder="Longitude" readonly variant="outlined" hide-details /></div></div>
 
                     <v-snackbar v-model="snackbar.show" :timeout="3000" top>
                         {{ snackbar.message }}
                     </v-snackbar>
 
 
-                    <v-btn block color="primary" large @click="submitForm">Save </v-btn>
-                </v-card>
+        <v-btn class="location-save" type="submit" block><v-icon start icon="mdi-content-save" />Save</v-btn>
+      </v-form>
 
 
                 <!-- MAP DIALOG -->
@@ -61,19 +55,17 @@
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
-            </v-col>
-        </v-row>
-    </v-container>
+    </main>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from "vue";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { ref, onMounted } from "vue";
 import BackButtonAppBar from "@/components/header/BackButtonAppBar.vue";
 import { useRouter } from 'vue-router'
 
 import { Geolocation } from "@capacitor/geolocation";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 import api from "@/services/api.js";
 import apiRoutes from "@/services/apiRoutes.js";
@@ -95,7 +87,6 @@ const showMap = ref(false);
 const mapObj = ref(null);
 const markerObj = ref(null);
 const selectedLocation = ref(null);
-const mapSelectionInProgress = ref(false);
 
 const states = ref([]);
 const districts = ref([]);
@@ -106,41 +97,29 @@ const snackbar = ref({ show: false, message: "" });
 //map
 
 function openMap() {
-    if (!apiRoutes.mapSecretKey) {
-        snackbar.value.message = "MapmyIndia API key is missing.";
-        snackbar.value.show = true;
-        return;
-    }
-
     showMap.value = true;
     selectedLocation.value = {
-        lat: Number(form.value.latitude) || 28.6139,
-        lng: Number(form.value.longitude) || 77.209,
+        lat: form.value.latitude,
+        lng: form.value.longitude,
     };
 
-    form.value.latitude = String(selectedLocation.value.lat);
-    form.value.longitude = String(selectedLocation.value.lng);
+    form.value.latitude = selectedLocation.value.lat;
+    form.value.longitude = selectedLocation.value.lng;
 
-    nextTick(() => initMap());
+    setTimeout(() => initMap(), 100);
 }
 
 function loadMapplsScript() {
     return new Promise((resolve, reject) => {
-        if (!apiRoutes.mapSecretKey) {
-            reject(new Error("MapmyIndia API key is missing."));
-            return;
-        }
-
-        if (window.mappls) {
-            resolve();
-            return;
-        }
+        if (!apiRoutes.mapSecretKey) return reject(new Error("Mappls API key is missing."));
+        if (window.mappls) return resolve();
 
         const script = document.createElement("script");
-        script.src = `https://apis.mappls.com/advancedmaps/api/${apiRoutes.mapSecretKey}/map_sdk?v=3.0&layer=vector`;
+        script.src =
+            "https://apis.mappls.com/advancedmaps/api/" + apiRoutes.mapSecretKey + "/map_sdk?v=3.0&layer=vector";
         script.async = true;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error("Unable to load MapmyIndia SDK."));
+        script.onload = resolve;
+        script.onerror = () => reject(new Error("Mappls SDK could not be loaded."));
         document.body.appendChild(script);
     });
 }
@@ -163,162 +142,108 @@ function createMarkerSVG(color) {
 function createMarkerIcon(color) {
     return "data:image/svg+xml;base64," + btoa(createMarkerSVG(color));
 }
-
-function updateMarkerPosition(lat, lng) {
-    if (!markerObj.value) return;
-
-    if (typeof markerObj.value.setPosition === "function") {
-        markerObj.value.setPosition({ lat, lng });
-        return;
-    }
-
-    if (typeof markerObj.value.setLatLng === "function") {
-        markerObj.value.setLatLng([lat, lng]);
-    }
-}
-
-function updateMapCenter(lat, lng) {
-    if (!mapObj.value) return;
-
-    if (typeof mapObj.value.setCenter === "function") {
-        mapObj.value.setCenter({ lat, lng });
-        return;
-    }
-
-    if (typeof mapObj.value.setView === "function") {
-        mapObj.value.setView([lat, lng], mapObj.value.getZoom?.() ?? 14);
-    }
-}
-
 async function applySelectedLocation(lat, lng) {
     if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return;
-
-    const safeLat = Number(lat);
-    const safeLng = Number(lng);
-
-    mapSelectionInProgress.value = true;
-    selectedLocation.value = { lat: safeLat, lng: safeLng };
-    form.value.latitude = String(safeLat);
-    form.value.longitude = String(safeLng);
-    updateMarkerPosition(safeLat, safeLng);
-    updateMapCenter(safeLat, safeLng);
-
-    try {
-        await populateAddressFromCoordinates(safeLat, safeLng);
-    } catch (error) {
-        console.warn("Address refresh after map selection failed:", error);
-    } finally {
-        mapSelectionInProgress.value = false;
-    }
+    selectedLocation.value = { lat: Number(lat), lng: Number(lng) };
+    form.value.latitude = String(lat);
+    form.value.longitude = String(lng);
+    if (markerObj.value?.setPosition) markerObj.value.setPosition({ lat, lng });
+    else if (markerObj.value?.setLatLng) markerObj.value.setLatLng([lat, lng]);
+    await populateAddressFromCoordinates(lat, lng);
 }
-
 function initFallbackMap() {
-    if (!document.getElementById("mapContainer")) return;
-
-    if (mapObj.value && typeof mapObj.value.remove === "function") {
-        mapObj.value.remove();
-    }
-
+    if (mapObj.value?.remove) mapObj.value.remove();
     const lat = Number(form.value.latitude) || 28.6139;
     const lng = Number(form.value.longitude) || 77.209;
-
-    mapObj.value = L.map("mapContainer", { zoomControl: true });
-    mapObj.value.setView([lat, lng], 14);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors",
-    }).addTo(mapObj.value);
-
-    if (markerObj.value && typeof markerObj.value.remove === "function") {
-        markerObj.value.remove();
-    }
-
+    mapObj.value = L.map("mapContainer").setView([lat, lng], 14);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors" }).addTo(mapObj.value);
     markerObj.value = L.marker([lat, lng], { draggable: true }).addTo(mapObj.value);
-
-    markerObj.value.on("dragend", async (event) => {
-        const coords = event.target.getLatLng();
-        await applySelectedLocation(coords.lat, coords.lng);
-    });
-
-    mapObj.value.on("click", async (event) => {
-        const { lat, lng } = event.latlng;
-        await applySelectedLocation(lat, lng);
-    });
-
-    snackbar.value.message = "MapmyIndia key is invalid or blocked; using OpenStreetMap fallback for location selection.";
-    snackbar.value.show = true;
+    markerObj.value.on("dragend", (event) => applySelectedLocation(event.target.getLatLng().lat, event.target.getLatLng().lng));
+    mapObj.value.on("click", (event) => applySelectedLocation(event.latlng.lat, event.latlng.lng));
 }
-
 async function initMap() {
     try {
-        await loadMapplsScript();
+    await loadMapplsScript();
 
-        if (!document.getElementById("mapContainer")) return;
+    // Always reset when opening dialog
+    mapObj.value = null;
+    markerObj.value = null;
 
-        mapObj.value = null;
-        markerObj.value = null;
+    const lat = form.value.latitude || 28.6139;
+    const lng = form.value.longitude || 77.209;
 
-        const lat = Number(form.value.latitude) || 28.6139;
-        const lng = Number(form.value.longitude) || 77.209;
+    selectedLocation.value = { lat, lng };
+
+    mapObj.value = new window.mappls.Map("mapContainer", {
+        center: { lat, lng },
+        zoom: 14,
+    });
+
+    // Draw initial marker
+    markerObj.value = new window.mappls.Marker({
+        map: mapObj.value,
+        position: { lat, lng },
+        draggable: true,
+        icon: createMarkerIcon(getPrimaryColor()),
+    });
+
+    markerObj.value.on("dragend", (evt) => {
+        ////console.log(evt)
+        const lat = evt.target._lngLat.lat || evt.latitude;
+        const lng = evt.target._lngLat.lng || evt.longitude;
 
         selectedLocation.value = { lat, lng };
 
-        mapObj.value = new window.mappls.Map("mapContainer", {
-            center: { lat, lng },
-            zoom: 14,
-        });
+        form.value.latitude = selectedLocation.value.lat;
+        form.value.longitude = selectedLocation.value.lng;
+        //console.log("Dragged:", this.selectedLocation);
+    });
 
-        markerObj.value = new window.mappls.Marker({
-            map: mapObj.value,
-            position: { lat, lng },
-            draggable: true,
-            icon: createMarkerIcon(getPrimaryColor()),
-        });
+    mapObj.value.on("click", (e) => {
 
-        markerObj.value.on("dragend", async (evt) => {
-            const mapPoint = evt?.target?._lngLat || evt;
-            const lat = mapPoint.lat ?? evt?.latitude;
-            const lng = mapPoint.lng ?? evt?.longitude;
+        //console.log('dd', e.lngLat)
+        const lat = e.lngLat.lat;
+        const lng = e.lngLat.lng;
 
-            await applySelectedLocation(lat, lng);
-        });
+        selectedLocation.value = { lat, lng };
 
-        mapObj.value.on("click", async (e) => {
-            const point = e?.lngLat || e?.latlng || {};
-            const lat = point.lat;
-            const lng = point.lng;
+        // If marker exists -> move it
+        if (markerObj.value) {
+            markerObj.value.setPosition({ lat, lng });
+        } else {
+            // Create new marker
+            markerObj.value = new mappls.Marker({
+                map: mapObj.value,
+                position: { lat, lng },
+                draggable: true,
+                icon: createMarkerIcon(getPrimaryColor())
+            });
 
-            if (!lat && !lng) return;
+            // Add dragend event only once
+            markerObj.value.on("dragend", (evt) => {
+                ////console.log(evt)
+                const lat = evt.target._lngLat.lat || evt.latitude;
+                const lng = evt.target._lngLat.lng || evt.longitude;
 
-            if (markerObj.value && typeof markerObj.value.setPosition === "function") {
-                markerObj.value.setPosition({ lat, lng });
-            } else {
-                markerObj.value = new window.mappls.Marker({
-                    map: mapObj.value,
-                    position: { lat, lng },
-                    draggable: true,
-                    icon: createMarkerIcon(getPrimaryColor())
-                });
+                selectedLocation.value = { lat, lng };
+                //console.log("Dragged:", this.selectedLocation);
+            });
+        }
 
-                markerObj.value.on("dragend", async (evt) => {
-                    const mapPoint = evt?.target?._lngLat || evt;
-                    const lat = mapPoint.lat ?? evt?.latitude;
-                    const lng = mapPoint.lng ?? evt?.longitude;
-                    await applySelectedLocation(lat, lng);
-                });
-            }
+        form.value.latitude = selectedLocation.value.lat;
+        form.value.longitude = selectedLocation.value.lng;
 
-            await applySelectedLocation(lat, lng);
-        });
+        //console.log("Clicked:", this.selectedLocation);
+    });
+
+    // setTimeout(() => this.mapObj.invalidateSize(), 300);
     } catch (error) {
-        console.error("MapmyIndia map load failed:", error);
+        console.warn("Mappls unavailable; using OpenStreetMap fallback.", error);
         initFallbackMap();
     }
 }
 
-async function populateAddressFromCoordinates(lat, lng, options = {}) {
-    const preserveMapSelection = options.preserveMapSelection ?? mapSelectionInProgress.value;
-
+async function populateAddressFromCoordinates(lat, lng) {
     // Try Mappls first, then fallback to Nominatim on network failure or no results
     try {
         const endpoint = "https://search.mappls.com/search/address/rev-geocode";
@@ -360,7 +285,7 @@ async function populateAddressFromCoordinates(lat, lng, options = {}) {
                     form.value.district = matchedDistrict?.lgd_code || "";
                 }
 
-                snackbar.value.message = preserveMapSelection ? "Selected map location updated." : "Address populated from GPS";
+                snackbar.value.message = "Address populated from GPS";
                 snackbar.value.show = true;
                 return;
             } else {
@@ -400,7 +325,7 @@ async function populateAddressFromCoordinates(lat, lng, options = {}) {
             form.value.district = matchedDistrict?.lgd_code || form.value.district || "";
         }
 
-        snackbar.value.message = preserveMapSelection ? "Selected map location updated." : "Address populated from fallback geocoder";
+        snackbar.value.message = "Address populated from fallback geocoder";
         snackbar.value.show = true;
         return;
     } catch (err) {
@@ -417,12 +342,13 @@ async function useCurrentLocation() {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
 
-        form.value.latitude = String(lat);
-        form.value.longitude = String(lng);
+        form.value.latitude = lat;
+        form.value.longitude = lng;
         selectedLocation.value = { lat, lng };
-
-        updateMarkerPosition(lat, lng);
-        updateMapCenter(lat, lng);
+        if (markerObj.value?.setPosition) markerObj.value.setPosition({ lat, lng });
+        else if (markerObj.value?.setLatLng) markerObj.value.setLatLng([lat, lng]);
+        if (mapObj.value?.setCenter) mapObj.value.setCenter({ lat, lng });
+        else if (mapObj.value?.setView) mapObj.value.setView([lat, lng], mapObj.value.getZoom());
 
         await populateAddressFromCoordinates(lat, lng);
         snackbar.value.message = "Location populated from device GPS";
@@ -606,35 +532,5 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Highlight required field asterisks in red */
-:deep(.v-field__label) {
-    color: inherit;
-}
-
-/* Make asterisks in required field labels appear in red */
-:deep(.v-select__label),
-:deep(.v-text-field__label) {
-    position: relative;
-}
-
-/* Style for required field hint text */
-:deep(.v-messages__message) {
-    font-size: 0.75rem;
-    color: #666;
-    font-weight: 500;
-}
-
-/* Add visual indicator for required fields */
-.required-field {
-    position: relative;
-}
-
-.required-field::after {
-    content: ' *';
-    color: #d32f2f;
-    font-weight: bold;
-}
+.location-page{min-height:calc(100vh - 100px);padding:28px 18px 100px;color:#082566;background:#fff url('@/assets/authenticated-background.png') center/100% 100% no-repeat}.location-form-card{width:min(870px,100%);margin:0 auto;padding:34px 32px 28px;border:1px solid #a9d5ff;border-radius:23px;background:#fffffff2;box-shadow:0 8px 24px #1676d21c}.location-field{display:flex;align-items:flex-start;gap:28px;margin-bottom:21px}.location-icon{display:grid;place-items:center;flex:0 0 58px;width:58px;height:58px;margin-top:4px;border-radius:13px;color:#68758a;background:#f0f4f9}.location-icon .v-icon{font-size:33px}.location-control{flex:1;min-width:0}.location-control label{display:block;margin:0 0 7px;color:#122d65;font-size:clamp(20px,2.4vw,29px);font-weight:800}.location-control label b{color:#e6222f}.location-control :deep(.v-field){border-radius:11px;background:#f8fbff}.location-control :deep(.v-field__input){min-height:58px;padding-inline:28px;font-size:20px;color:#52627b}.location-control :deep(.v-messages__message){font-size:15px;color:#7a8495}.location-action,.location-save{width:100%;height:62px!important;margin:0 0 10px;border-radius:12px;background:linear-gradient(110deg,#1688ed,#0867d6)!important;color:#fff;font-size:22px;font-weight:800;letter-spacing:.3px}.location-save{margin-top:8px;height:66px!important}.location-action .v-icon,.location-save .v-icon{font-size:32px}.compact{margin-top:18px;margin-bottom:14px}.compact .location-icon{background:transparent}.compact .location-control label{font-size:20px}.compact .location-control :deep(.v-field__input){min-height:55px}.location-control :deep(.v-field__prepend-inner){display:none}@media(max-width:650px){.location-page{padding:20px 10px 90px}.location-form-card{padding:18px 10px;border-radius:18px}.location-field{gap:12px;margin-bottom:13px}.location-icon{flex-basis:42px;width:42px;height:42px;margin-top:2px;border-radius:10px}.location-icon .v-icon{font-size:24px}.location-control label{margin-bottom:4px;font-size:15px}.location-control :deep(.v-field__input){min-height:30px!important;padding-inline:14px!important;font-size:14px!important}.location-control :deep(.v-messages__message){font-size:12px}.location-action{height:52px!important;font-size:16px}.location-save{height:52px!important;font-size:17px}.location-action .v-icon,.location-save .v-icon{font-size:25px}.compact{margin-top:10px}.compact .location-control label{font-size:15px}.compact .location-control :deep(.v-field__input){min-height:30px}}
 </style>
-.v-card {
-    border-radius: 12px;
-}
