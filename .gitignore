@@ -1,0 +1,6 @@
+api/.env
+app/.env
+app/.env.production
+**/node_modules/
+api/vendor/
+api/storage/logs/*.log
