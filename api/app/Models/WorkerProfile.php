@@ -37,6 +37,7 @@ class WorkerProfile extends Model
         'gender',
         'docType',
         'docNumber',
+        'dob',
         'pdf',
         'rate',
         'lat',
@@ -46,6 +47,7 @@ class WorkerProfile extends Model
     protected $casts = [
         'skill_id' => 'array',
         'other_skills' => 'string',
+        'dob' => 'date',
     ];
 
    public function worker()

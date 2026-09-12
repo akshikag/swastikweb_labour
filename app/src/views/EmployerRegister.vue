@@ -49,6 +49,9 @@
                                 <v-text-field v-model="form.password" label="Password *" variant="filled" type="password"
                                     :error-messages="v$.form.password.$errors.map(e => e.$message)" />
 
+                                <v-text-field v-model="form.dob" label="Date of Birth *" type="date" variant="filled"
+                                    :error-messages="v$.form.dob.$errors.map(e => e.$message)" />
+
                                 <!-- Agreement Checkbox -->
                                 <v-checkbox v-model="isAgreed" hide-details color="primary">
                                     <template #label>
@@ -176,6 +179,7 @@ export default {
             email: "",
             phone: "",
             password: "",
+            dob: "",
         },
     };
 },
@@ -206,6 +210,21 @@ computed: {
                     required: helpers.withMessage("Password is required", required),
                     minLength: helpers.withMessage("Password must be at least 6 characters", minLength(6)),
                 },
+                dob: {
+                    required: helpers.withMessage('Date of birth is required', required),
+                    maxAge: helpers.withMessage('Sorry, users above 60 years of age are not eligible for registration.', (value) => {
+                        if (!value) return false;
+                        const dob = new Date(value);
+                        if (isNaN(dob)) return false;
+                        const today = new Date();
+                        let age = today.getFullYear() - dob.getFullYear();
+                        const m = today.getMonth() - dob.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                            age--;
+                        }
+                        return age <= 60;
+                    })
+                }
             },
         };
     },

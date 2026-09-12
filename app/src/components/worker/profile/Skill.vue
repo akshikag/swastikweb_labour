@@ -13,27 +13,32 @@
                             <!-- Skill Selection -->
                             <div class="mb-2">Select Skills:</div>
                             <v-select v-model="form.skill_id" :items="skills" item-title="name" item-value="id" multiple
-                                chips label="Select Skill *" />
+                                chips label="Select Skill *" :rules="[v => (v || []).length > 0 || 'Select at least one skill']"
+                                @update:model-value="markFormDirty" />
 
-                            <v-text-field v-if="(form.skill_id || []).includes('other')" label="Specify other skills (comma separated)" v-model="form.other_skills" class="mt-3" />
+                            <v-text-field v-if="(form.skill_id || []).includes('other')" label="Specify other skills (comma separated)" v-model="form.other_skills"
+                                :rules="[v => !(form.skill_id || []).includes('other') || !!String(v || '').trim() || 'Specify your other skills']"
+                                @update:model-value="markFormDirty" class="mt-3" />
 
                             <!-- Experience Input -->
                             <v-text-field label="Experience (Years) *" v-model="form.experience" type="number"
-                                :rules="[v => v !== '' || 'Experience is required', v => Number(v) >= 0 || 'Experience cannot be negative']" class="mt-3" />
+                                :rules="[v => v !== '' || 'Experience is required', v => Number(v) >= 0 || 'Experience cannot be negative']"
+                                @update:model-value="markFormDirty" class="mt-3" />
 
                             <!-- Preferred Work Type -->
                             <v-select label="Preferred Work Type *" v-model="form.workType"
                                 :items="['Daily Wage', 'Contract']" :rules="[v => !!v || 'Please select work type']"
-                                class="mt-3" />
+                                @update:model-value="markFormDirty" class="mt-3" />
 
                             <!-- Experience Input -->
                             <v-text-field label="Daily Rate (Rs) *" v-model="form.rate" type="number"
-                                :rules="[v => !!v || 'Rate ie required !!']" class="mt-3" />
+                                :rules="[v => !!v || 'Rate is required']" @update:model-value="markFormDirty" class="mt-3" />
 
                             <!-- Experience Input -->
                             <!-- Preferred Work Type -->
                             <v-select label="Select Availability for work *" v-model="form.availability"
-                                :items="['Yes', 'No']" :rules="[v => !!v || 'Please select work type']" class="mt-3" />
+                                :items="['Yes', 'No']" :rules="[v => !!v || 'Please select availability']"
+                                @update:model-value="markFormDirty" class="mt-3" />
 
 
 
@@ -61,6 +66,7 @@ export default {
     data() {
         return {
             valid: false,
+            formHasUserInput: false,
             skills: [],
             form: {
                 skill_id: [],
@@ -74,6 +80,9 @@ export default {
         };
     },
     methods: {
+        markFormDirty() {
+            this.formHasUserInput = true;
+        },
         async getSkills() {
             try {
                 this.loading = true;
@@ -95,6 +104,8 @@ export default {
                 console.log("Success:", res.data);
 
                 const data = res.data.worker;
+                // Do not replace a draft if the user started editing before this request completed.
+                if (this.formHasUserInput) return;
                 // Populate form values safely
                 this.form = {
                     age: data.profile?.age || '',
@@ -115,7 +126,8 @@ export default {
             }
         },
         async submitForm() {
-            if (this.$refs.skillForm.validate()) {
+            const { valid } = await this.$refs.skillForm.validate();
+            if (valid) {
                 //console.log("Form Submitted:", this.form);
                 try {
                     const workerData = JSON.parse(localStorage.getItem('labour_currentUser'))
@@ -128,15 +140,23 @@ export default {
                     }
 
                     // send numeric skill ids only; send any other_skills separately
-                    const skillIds = (this.form.skill_id || []).filter(s => s !== 'other');
-                    const res = await api.put(apiRoutes.workerUpdate + '/' + workerData.worker.id, {
+                    const selectedSkills = this.form.skill_id || [];
+                    const skillIds = selectedSkills.filter(s => s !== 'other');
+                    const payload = {
                         skill_id: skillIds,
-                        other_skills: this.form.other_skills || null,
                         experience: this.form.experience,
                         work_type: this.form.workType,
                         availability: this.form.availability,
                         rate: this.form.rate,
-                    });
+                    };
+
+                    // Only include this new field when it is actually needed. This also
+                    // keeps normal skill updates compatible until the migration is run.
+                    if (selectedSkills.includes('other')) {
+                        payload.other_skills = this.form.other_skills.trim();
+                    }
+
+                    await api.put(apiRoutes.workerUpdate + '/' + workerData.worker.id, payload);
 
                     //console.log("Success:", res.data)
                     alert("Form submitted successfully!");

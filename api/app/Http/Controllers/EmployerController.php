@@ -21,6 +21,7 @@ class EmployerController extends Controller
             'email' => 'nullable|email|unique:employers,email',
             'phone' => 'required|digits:10|unique:employers,phone',
             'password' => 'required|string|min:6|max:10',
+            'dob' => 'required|date',
            // 'skills' => 'required|array',
            // 'skills.*' => 'exists:skills,id',
         ]);
@@ -32,6 +33,18 @@ class EmployerController extends Controller
             ], 422);
         }
 
+        // Server-side age check: disallow users older than 60
+        if ($request->filled('dob')) {
+            $dob = \Carbon\Carbon::parse($request->dob);
+            $ageYears = $dob->diffInYears(now());
+            if ($ageYears > 60) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => ['dob' => ['Sorry, users above 60 years of age are not eligible for registration.']]
+                ], 422);
+            }
+        }
+
         $user = Employer::create([
             'email' => $request->email,
             'phone' => $request->phone,
@@ -41,6 +54,7 @@ class EmployerController extends Controller
         $profile = EmployerProfile::create([
             'name'=> $request->name,
             'employer_id' => $user->id,
+                'dob' => $request->dob ?? null,
             'avg_worker' => $request->avg_worker,
             'work_type' => $request->work_type,
             'location' => $request->location,

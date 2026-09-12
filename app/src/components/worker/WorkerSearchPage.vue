@@ -170,13 +170,13 @@ export default {
             try {
                 const res = await api.get(apiRoutes.workerSearchjobJobs, {
                     params: {
-                        location: this.filters.location,
-                        lat: this.latitude,
-                        long: this.longitude,
-                        skill_id: this.filters.skill,
-                        range: this.filters.range,
-                        page: this.page,
-                    }
+                            location: this.filters.location,
+                            lat: this.latitude,
+                            long: this.longitude,
+                            skills_id: this.filters.skill,
+                            range: this.filters.range,
+                            page: this.page,
+                        }
                 });
 
                 // console.log('job', res.data)

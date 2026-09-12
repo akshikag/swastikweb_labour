@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class WorkerController extends Controller
@@ -17,6 +18,7 @@ class WorkerController extends Controller
             'email' => 'nullable|email|unique:workers,email',
             'phone' => 'required|digits:10|unique:workers,phone',
             'password' => 'required|string|min:6|max:10',
+            'dob' => 'required|date',
             'age' => 'nullable|integer|min:0',
             'experience' => 'nullable|numeric|min:0',
         ]);
@@ -39,18 +41,38 @@ class WorkerController extends Controller
             ], 422);
         }
 
+        // Server-side age check: disallow users older than 60
+        if ($request->filled('dob')) {
+            $dob = \Carbon\Carbon::parse($request->dob);
+            $ageYears = $dob->diffInYears(now());
+            if ($ageYears > 60) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => ['dob' => ['Sorry, users above 60 years of age are not eligible for registration.']]
+                ], 422);
+            }
+        }
+
         $user = Worker::create([
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
         ]);
 
-        $profile = WorkerProfile::create([
+        $profileData = [
             'name' => $request->name,
             'worker_id' => $user->id,
             'skill_id' => array_values(array_filter($request->skill_id ?? [])),
-            'other_skills' => $request->other_skills ?? null,
-        ]);
+            'dob' => $request->dob ?? null,
+        ];
+
+        // Only persist this optional field when it was supplied. This keeps
+        // registration compatible until the accompanying migration is run.
+        if ($request->filled('other_skills')) {
+            $profileData['other_skills'] = trim((string) $request->other_skills);
+        }
+
+        $profile = WorkerProfile::create($profileData);
 
         $token = JWTAuth::fromUser($user);
 
@@ -99,6 +121,7 @@ class WorkerController extends Controller
 
     public function updateWorker(Request $request, $id)
     {
+        try {
         if ($request->has("docNumber")) {
             $request->merge([
                 "docNumber" => strtoupper(preg_replace("/[-\s]/", "", trim((string) $request->docNumber))),
@@ -244,13 +267,26 @@ class WorkerController extends Controller
 
             $profile->save();
         }
-
         return response()->json([
             'status' => true,
             'message' => 'Worker & profile updated successfully',
             'worker' => $worker,
             'profile' => $profile
         ]);
+        } catch (\Throwable $e) {
+            Log::error('updateWorker error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+                'worker_id' => $id,
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred while updating worker profile',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function getWorker($id)
@@ -266,7 +302,10 @@ class WorkerController extends Controller
 
         $profile = $worker->profile;
         $skills = $profile->skills ?? [];
-        $worker->profile['skills'] = $skills;
+        if ($profile) {
+            $profile->setAttribute('skills', $skills);
+            $worker->setRelation('profile', $profile);
+        }
 
 
 
