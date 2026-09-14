@@ -11,6 +11,7 @@ class EmployerProfile extends Model
 
     protected $fillable = [
         'employer_id',
+        'dob',
         'age',
         'name',
         //'skill_id',

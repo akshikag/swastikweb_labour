@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\{User, Worker, WorkerProfile};
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -17,6 +18,7 @@ class WorkerController extends Controller
             'email' => 'nullable|email|unique:workers,email',
             'phone' => 'required|digits:10|unique:workers,phone',
             'password' => 'required|string|min:6|max:10',
+            'dob' => 'required|date',
             'age' => 'nullable|integer|min:0',
             'experience' => 'nullable|numeric|min:0',
         ]);
@@ -39,6 +41,22 @@ class WorkerController extends Controller
             ], 422);
         }
 
+        // Server-side age enforcement: reject users older than 60
+        try {
+            $age = Carbon::parse($request->dob)->diffInYears(now());
+            if ($age > 60) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => ['dob' => ['Sorry, users above 60 years of age are not eligible for registration.']]
+                ], 422);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'errors' => ['dob' => ['Invalid date of birth provided.']]
+            ], 422);
+        }
+
         $user = Worker::create([
             'email' => $request->email,
             'phone' => $request->phone,
@@ -50,6 +68,7 @@ class WorkerController extends Controller
             'worker_id' => $user->id,
             'skill_id' => array_values(array_filter($request->skill_id ?? [])),
             'other_skills' => $request->other_skills ?? null,
+            'dob' => $request->dob ?? null,
         ]);
 
         $token = JWTAuth::fromUser($user);

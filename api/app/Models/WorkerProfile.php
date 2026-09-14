@@ -33,6 +33,7 @@ class WorkerProfile extends Model
         'state',
         'pin_code',
         'profile_image',
+        'dob',
         'other_skills',
         'gender',
         'docType',
@@ -46,6 +47,7 @@ class WorkerProfile extends Model
     protected $casts = [
         'skill_id' => 'array',
         'other_skills' => 'string',
+        'dob' => 'date',
     ];
 
    public function worker()
