@@ -23,6 +23,9 @@
               <label class="field"><v-icon icon="mdi-email" /><input v-model="form.email" type="email" autocomplete="email" placeholder="Email (Optional)" /></label>
               <p v-if="v$.form.email.$error" class="error-text">{{ v$.form.email.$errors[0]?.$message }}</p>
 
+              <label class="field" :class="{ 'field--error': v$.form.dob.$error }"><v-icon icon="mdi-cake-variant" /><input v-model="form.dob" type="date" placeholder="Date of Birth *" /></label>
+              <p v-if="v$.form.dob.$error" class="error-text">{{ v$.form.dob.$errors[0]?.$message }}</p>
+
               <label class="field" :class="{ 'field--error': v$.form.phone.$error }"><v-icon icon="mdi-phone" /><input v-model="form.phone" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="Phone Number *" @input="form.phone = form.phone.replace(/\D/g, '').slice(0, 10)" /></label>
               <p v-if="v$.form.phone.$error" class="error-text">{{ v$.form.phone.$errors[0]?.$message }}</p>
 
@@ -76,7 +79,7 @@ export default {
       terms: '', isAgreed: false, showTerms: false, showPassword: false,
       step: 1, otp: '', resendTimer: 0, resendTimerInterval: null,
       resendOtpDelay: 60, isResendingOtp: false, resendCount: 0, maxResendCount: 3,
-      form: { name: '', email: '', phone: '', password: '' }
+      form: { name: '', email: '', phone: '', password: '', dob: '' }
     }
   },
   computed: {
@@ -91,6 +94,21 @@ export default {
       form: {
         name: { required },
         email: { email: helpers.withMessage('Invalid email', email) },
+          dob: {
+            required: helpers.withMessage('Date of birth is required', required),
+            ageValid: helpers.withMessage('Sorry, users above 60 years of age are not eligible for registration.', value => {
+              if (!value) return false;
+              const dob = new Date(value);
+              if (Number.isNaN(dob.getTime())) return false;
+              const today = new Date();
+              let age = today.getFullYear() - dob.getFullYear();
+              const m = today.getMonth() - dob.getMonth();
+              if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+              }
+              return age <= 60;
+            })
+          },
         phone: {
           required,
           numeric: helpers.withMessage('Phone must be digits', numeric),

@@ -14,6 +14,7 @@
                     <v-form v-if="step === 1" class="register-form" @submit.prevent="sendOtp">
                         <v-text-field v-model="form.name" placeholder="Full Name *" prepend-inner-icon="mdi-account" variant="outlined" hide-details="auto" :error-messages="v$.form.name.$errors.map(e => e.$message)" />
                         <v-text-field v-model="form.email" placeholder="Email (Optional)" prepend-inner-icon="mdi-email" variant="outlined" type="email" hide-details="auto" :error-messages="v$.form.email.$errors.map(e => e.$message)" />
+                        <v-text-field v-model="form.dob" placeholder="Date of Birth *" prepend-inner-icon="mdi-cake-variant" variant="outlined" type="date" hide-details="auto" :error-messages="v$.form.dob.$errors.map(e => e.$message)" />
                         <v-text-field v-model="form.phone" placeholder="Phone Number *" prepend-inner-icon="mdi-phone" variant="outlined" maxlength="10" :counter="10" hide-details="auto" @input="form.phone = form.phone.replace(/\D/g, '').slice(0, 10)" :error-messages="v$.form.phone.$errors.map(e => e.$message)" />
                         <v-text-field v-model="form.password" placeholder="Password *" prepend-inner-icon="mdi-lock" variant="outlined" :type="showPassword ? 'text' : 'password'" hide-details="auto" :error-messages="v$.form.password.$errors.map(e => e.$message)">
                             <template #append-inner><v-icon class="register-visibility" @click="showPassword = !showPassword">{{ showPassword ? 'mdi-eye-off-outline' : 'mdi-eye-outline' }}</v-icon></template>
@@ -79,6 +80,7 @@ export default {
             email: "",
             phone: "",
             password: "",
+            dob: "",
         },
     };
 },
@@ -108,6 +110,21 @@ computed: {
                 password: {
                     required: helpers.withMessage("Password is required", required),
                     minLength: helpers.withMessage("Password must be at least 6 characters", minLength(6)),
+                },
+                dob: {
+                    required: helpers.withMessage('Date of birth is required', required),
+                    ageValid: helpers.withMessage('Sorry, users above 60 years of age are not eligible for registration.', value => {
+                        if (!value) return false;
+                        const dob = new Date(value);
+                        if (Number.isNaN(dob.getTime())) return false;
+                        const today = new Date();
+                        let age = today.getFullYear() - dob.getFullYear();
+                        const m = today.getMonth() - dob.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                            age--;
+                        }
+                        return age <= 60;
+                    })
                 },
             },
         };
