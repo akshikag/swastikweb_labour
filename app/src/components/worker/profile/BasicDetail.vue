@@ -129,6 +129,7 @@ async function submitForm() {
 
         console.log("Success:", res.data)
 
+        alert("Data updated successfully.");
         router.push('/worker-dashboard-profile-identity')
 
     } catch (err) {

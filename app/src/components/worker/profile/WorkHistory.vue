@@ -9,7 +9,7 @@
                     <div class="work-field"><span class="work-field-icon"><v-icon>mdi-file-document</v-icon></span><div><label>Project Name <b>*</b></label><v-text-field v-model="job.project_name" placeholder="Enter project name" required :rules="[v => !!v || 'Project Name is required']" hide-details /></div></div>
                     <div class="work-field"><span class="work-field-icon"><v-icon>mdi-map-marker</v-icon></span><div><label>Work Place <b>*</b></label><v-text-field v-model="job.work_place" placeholder="Enter work place / site location" required :rules="[v => !!v || 'Work Place is required']" hide-details /></div></div>
                     <div class="work-field"><span class="work-field-icon"><v-icon>mdi-briefcase</v-icon></span><div><label>Work Type <b>*</b></label><v-text-field v-model="job.work_type" placeholder="Enter work type" required :rules="[v => !!v || 'Work Type is required']" hide-details /></div></div>
-                    <div class="work-field"><span class="work-field-icon"><v-icon>mdi-hammer-wrench</v-icon></span><div><label>Skill</label><v-select v-model="job.skill_id" :items="skills" item-title="name" item-value="id" multiple chips clearable placeholder="Select skill" hide-details /></div></div>
+                    <div class="work-field"><span class="work-field-icon"><v-icon>mdi-hammer-wrench</v-icon></span><div><label>Skill</label><v-autocomplete v-model="job.skill_id" :items="skills" item-title="name" item-value="id" multiple chips clearable placeholder="Type skill name" hide-details filterable :custom-filter="customSkillFilter" no-data-text="No matching skills" /></div></div>
                     <div class="work-field work-field--textarea"><span class="work-field-icon"><v-icon>mdi-text-box-outline</v-icon></span><div><label>Task Description</label><v-textarea v-model="job.task_description" placeholder="Enter task description" rows="3" hide-details /></div></div>
                     <div class="work-field"><span class="work-field-icon"><v-icon>mdi-calendar</v-icon></span><div><label>Start Date <b>*</b></label><v-text-field v-model="job.start_date" type="date" required :rules="[v => !!v || 'Start Date is required']" hide-details /></div></div>
                     <div class="work-field"><span class="work-field-icon"><v-icon>mdi-calendar</v-icon></span><div><label>End Date <b>*</b></label><v-text-field v-model="job.end_date" type="date" required :rules="[v => !!v || 'End Date is required']" hide-details /></div></div>
@@ -57,6 +57,13 @@ const workHistory = ref([
 ]);
 
 const skills = ref([]);
+
+function customSkillFilter(itemTitle, queryText, item) {
+    if (!queryText) return true;
+    const normalizedQuery = String(queryText).trim().toLowerCase();
+    if (!normalizedQuery) return true;
+    return String(itemTitle || item?.title || '').toLowerCase().includes(normalizedQuery);
+}
 onMounted(async () => {
     try {
         const res = await api.get(apiRoutes.getAllSkill);
@@ -151,7 +158,7 @@ async function submitForm() {
         // Send all entries in one bulk request
         await api.post(apiRoutes.workerCreateJobHistory, payload);
 
-        alert("Work history submitted successfully!");
+        alert("Data updated successfully.");
         router.push('/worker-dashboard-profile-education')
     } catch (error) {
         console.error('Error submitting work history:', error);

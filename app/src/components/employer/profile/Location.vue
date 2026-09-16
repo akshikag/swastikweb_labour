@@ -205,6 +205,7 @@ async function submitForm() {
 
         console.log("Success:", res.data)
 
+        alert("Data updated successfully.");
         router.push('/employer-dashboard-profile-work')
 
     } catch (err) {

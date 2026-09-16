@@ -11,9 +11,9 @@
                 <span class="work-icon"><v-icon icon="mdi-hard-hat" /></span>
                 <div class="work-control">
                     <label>कार्य श्रेणी - Typical Work Category</label>
-                    <v-select v-model="form.workCategory" multiple chips :items="workCategories"
-                        item-title="name" item-value="id" placeholder="Select work category"
-                        variant="outlined" hide-details="auto" />
+                    <v-autocomplete v-model="form.workCategory" multiple chips :items="workCategories"
+                        item-title="name" item-value="id" placeholder="Type work category"
+                        variant="outlined" hide-details="auto" filterable :custom-filter="customSkillFilter" no-data-text="No matching work categories" />
                 </div>
             </div>
 
@@ -63,6 +63,13 @@ const workerRanges = ref([
     { title: "100+", value: "100+" },
 ]);
 
+function customSkillFilter(itemTitle, queryText, item) {
+    if (!queryText) return true;
+    const normalizedQuery = String(queryText).trim().toLowerCase();
+    if (!normalizedQuery) return true;
+    return String(itemTitle || item?.title || '').toLowerCase().includes(normalizedQuery);
+}
+
 async function submitForm() {
     //console.log(form.value);
 
@@ -76,6 +83,7 @@ async function submitForm() {
         });
 
         console.log("Success:", res.data)
+        alert("Data updated successfully.");
         router.push('/employer-dashboard-home')
 
     } catch (err) {
