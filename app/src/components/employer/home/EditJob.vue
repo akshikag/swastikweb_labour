@@ -24,11 +24,12 @@
 
                     <!-- Category -->
                     <v-col cols="12" sm="6">
-                        <v-select v-model="form.category" label="Job Category *" :items="categories" multiple
+                        <v-autocomplete v-model="form.category" label="Job Category *" :items="categories" multiple
                             item-title="name" item-value="id" prepend-inner-icon="mdi-hammer-wrench"
                             :error="v$.form.category.$error"
-                            :error-messages="v$.form.category.$errors.map(() => 'Category is required')" outlined
-                            dense />
+                            :error-messages="v$.form.category.$errors.map(() => 'Category is required')"
+                            filterable :custom-filter="customSkillFilter" clearable chips
+                            no-data-text="No matching skills" outlined dense />
                     </v-col>
 
                     <!-- Dates -->
@@ -534,6 +535,12 @@ export default {
                 alert("Failed to load facilities.");
             }
 
+        },
+        customSkillFilter(itemTitle, queryText, item) {
+            if (!queryText) return true;
+            const normalizedQuery = String(queryText).trim().toLowerCase();
+            if (!normalizedQuery) return true;
+            return String(itemTitle || item?.title || '').toLowerCase().includes(normalizedQuery);
         },
         async getSkills() {
 

@@ -4,7 +4,7 @@
                 <v-form v-model="valid" ref="skillForm" class="skill-form-card">
                         <div class="skill-heading"><span class="skill-heading-icon"><v-icon icon="mdi-briefcase" /></span><div><h1>कौशल सूचना - <span>Skill Information</span></h1><p>Tell us about your skills and work experience</p></div></div>
                             <!-- Skill Selection -->
-                            <div class="skill-field"><span class="skill-icon"><v-icon icon="mdi-file-document" /></span><div class="skill-control"><label>Select Skill <b>*</b></label><v-select v-model="form.skill_id" :items="skills" item-title="name" item-value="id" multiple chips placeholder="Select Skill" variant="outlined" hide-details /></div></div>
+                            <div class="skill-field"><span class="skill-icon"><v-icon icon="mdi-file-document" /></span><div class="skill-control"><label>Select Skill <b>*</b></label><v-autocomplete v-model="form.skill_id" :items="skills" item-title="name" item-value="id" multiple chips placeholder="Type skill name" variant="outlined" hide-details filterable :custom-filter="customSkillFilter" no-data-text="No matching skills" /></div></div>
 
                             <v-text-field v-if="(form.skill_id || []).includes('other')" label="Specify other skills (comma separated)" v-model="form.other_skills" variant="outlined" />
 
@@ -50,6 +50,12 @@ export default {
         };
     },
     methods: {
+        customSkillFilter(itemTitle, queryText, item) {
+            if (!queryText) return true;
+            const normalizedQuery = String(queryText).trim().toLowerCase();
+            if (!normalizedQuery) return true;
+            return String(itemTitle || item?.title || '').toLowerCase().includes(normalizedQuery);
+        },
         async getSkills() {
             try {
                 this.loading = true;
@@ -115,7 +121,7 @@ export default {
                     });
 
                     //console.log("Success:", res.data)
-                    alert("Form submitted successfully!");
+                    alert("Data updated successfully.");
                     this.$router.push('/worker-dashboard-profile-workhistory')
 
                 } catch (err) {

@@ -16,7 +16,7 @@
             </v-col>
 
             <v-col cols="6">
-                <div class="search-filter-field"><span class="filter-icon"><v-icon>mdi-briefcase</v-icon></span><div class="filter-control"><label>Select Skill</label><v-select v-model="filters.skill" :items="skills" item-title="name" item-value="id" placeholder="Choose Skill" variant="outlined" density="compact" hide-details clearable /></div></div>
+                <div class="search-filter-field"><span class="filter-icon"><v-icon>mdi-briefcase</v-icon></span><div class="filter-control"><label>Select Skill</label><v-autocomplete v-model="filters.skill" :items="skills" item-title="name" item-value="id" placeholder="Type skill name" variant="outlined" density="compact" hide-details clearable filterable :custom-filter="customSkillFilter" no-data-text="No matching skills" /></div></div>
             </v-col>
             <v-col cols="6">
                 <div class="search-filter-field"><span class="filter-icon"><v-icon>mdi-ruler</v-icon></span><div class="filter-control"><label>Range (km)</label><v-select v-model="filters.range" :items="ranges" item-title="name" item-value="id" placeholder="Select range" variant="outlined" density="compact" hide-details clearable /></div></div>
@@ -139,6 +139,12 @@ export default {
         // this.openMap()
     },
     methods: {
+        customSkillFilter(itemTitle, queryText, item) {
+            if (!queryText) return true;
+            const normalizedQuery = String(queryText).trim().toLowerCase();
+            if (!normalizedQuery) return true;
+            return String(itemTitle || item?.title || '').toLowerCase().includes(normalizedQuery);
+        },
         async getskill() {
             try {
                 const res = await api.get(apiRoutes.getAllSkill);

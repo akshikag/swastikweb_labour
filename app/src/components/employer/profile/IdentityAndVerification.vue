@@ -165,13 +165,20 @@ const fileSizeRule = (value) => {
 };
 
 function normalizeDocumentNumber(value) {
-    if (!value) return;
-    const normalized = String(value).trim().toUpperCase();
-    form.value.docNumber = normalized;
+    const rawValue = typeof value === 'string'
+        ? value
+        : value?.target?.value ?? value ?? '';
+
+    if (!rawValue) {
+        form.value.docNumber = '';
+        return;
+    }
+
+    form.value.docNumber = String(rawValue).trim().toUpperCase();
 }
 
 function validateDocumentNumber(value) {
-    const input = String(value || '').trim();
+    const input = String(typeof value === 'string' ? value : value?.target?.value ?? value ?? '').trim();
 
     if (!input) {
         return 'Please enter the document number.';
@@ -246,6 +253,7 @@ async function submitForm() {
 
         console.log("Success:", res.data)
 
+        alert("Data updated successfully.");
         router.push('/employer-dashboard-profile-location')
 
     } catch (err) {

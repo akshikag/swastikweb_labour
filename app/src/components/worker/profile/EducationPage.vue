@@ -166,7 +166,7 @@ export default {
 
                 console.log("Saved:", res.data);
 
-                alert("Education added successfully.");
+                alert("Data updated successfully.");
 
                 this.$router.push("/worker-dashboard-profile");
 

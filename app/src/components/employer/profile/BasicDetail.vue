@@ -135,9 +135,9 @@ const imageErrorMessage = ref("");
 
 // Handle file change event (validate image)
 const handleFileChange = (event) => {
-    const file = event.target.files[0];
+    const file = event?.target?.files?.[0] ?? event;
 
-    if (file) {
+    if (file && file instanceof File) {
         const isValid = validateImage(file);
         if (isValid) {
             // Valid file, update image in form
@@ -238,6 +238,7 @@ async function submitForm() {
             }
         );
 
+        alert("Data updated successfully.");
         router.push("/employer-dashboard-profile-identity");
     } catch (err) {
         alert("Update failed!", err);
